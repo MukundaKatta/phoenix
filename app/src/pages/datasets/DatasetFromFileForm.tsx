@@ -35,6 +35,7 @@ import {
 } from "./ColumnAssigner";
 import { computeBucketCollapseConflicts } from "./ColumnAssigner/collapseUtils";
 import { ColumnMultiSelector } from "./ColumnMultiSelector";
+import { ColumnSingleSelector } from "./ColumnSingleSelector";
 import { DatasetPreviewTable } from "./DatasetPreview";
 import { RowPreviewTable } from "./RowPreview";
 
@@ -76,6 +77,7 @@ type CreateDatasetFromFileParams = {
   output_keys: string[];
   metadata_keys: string[];
   split_keys: string[];
+  example_id_key: string | null;
   name: string;
   description: string;
   metadata: Record<string, unknown>;
@@ -232,6 +234,7 @@ export function DatasetFromFileForm({
       output_keys: [],
       metadata_keys: [],
       split_keys: [],
+      example_id_key: null,
       description: "",
       metadata: {},
     },
@@ -463,6 +466,7 @@ export function DatasetFromFileForm({
     resetField("output_keys");
     resetField("metadata_keys");
     resetField("split_keys");
+    resetField("example_id_key");
     resetField("name");
     setErrorMessage(null);
     setPreviewTab("file");
@@ -480,6 +484,7 @@ export function DatasetFromFileForm({
     setValue("output_keys", [], { shouldDirty: true });
     setValue("metadata_keys", [], { shouldDirty: true });
     setValue("split_keys", [], { shouldDirty: true });
+    setValue("example_id_key", null, { shouldDirty: true });
   }, [setValue]);
 
   const handleColumnAssignerAuto = useCallback(() => {
@@ -541,6 +546,9 @@ export function DatasetFromFileForm({
         keysToCollapse.forEach((key) => {
           formData.append("flatten_keys[]", key);
         });
+      }
+      if (data.example_id_key) {
+        formData.append("example_id_key", data.example_id_key);
       }
 
       return fetch(prependBasename("/v1/datasets/upload?sync=true"), {
@@ -762,6 +770,24 @@ export function DatasetFromFileForm({
                   description={`Select one or more ${fileType === "csv" ? "column" : "key"}s to automatically assign examples to splits`}
                   columns={columns}
                   selectedColumns={value}
+                  onChange={onChange}
+                  errorMessage={error?.message}
+                  isDisabled={isSubmitting || isParsing}
+                />
+              )}
+            />
+            <Controller
+              name="example_id_key"
+              control={control}
+              render={({
+                field: { value, onChange },
+                fieldState: { error },
+              }) => (
+                <ColumnSingleSelector
+                  label="Example ID Column (optional)"
+                  description={`Select a ${fileType === "csv" ? "column" : "key"} to use as a unique identifier for upserting examples`}
+                  columns={columns}
+                  selectedColumn={value}
                   onChange={onChange}
                   errorMessage={error?.message}
                   isDisabled={isSubmitting || isParsing}
