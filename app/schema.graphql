@@ -887,6 +887,7 @@ input DatasetExampleInput {
   output: JSON!
   metadata: JSON!
   spanId: ID
+  externalId: String
 }
 
 input DatasetExamplePatch {
