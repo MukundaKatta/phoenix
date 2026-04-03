@@ -659,7 +659,8 @@ async def span_search_otlpv1(
         default=None,
         description=(
             "Filter by attribute key:value pairs (dot-separated keys, "
-            "e.g. llm.model_name:gpt-4). Multiple filters are ANDed."
+            "e.g. llm.model_name:gpt-4). Multiple filters are ANDed. "
+            "Values may contain colons (split is on the first colon only)."
         ),
     ),
 ) -> OtlpSpansResponseBody:
@@ -846,7 +847,8 @@ async def span_search(
         default=None,
         description=(
             "Filter by attribute key:value pairs (dot-separated keys, "
-            "e.g. llm.model_name:gpt-4). Multiple filters are ANDed."
+            "e.g. llm.model_name:gpt-4). Multiple filters are ANDed. "
+            "Values may contain colons (split is on the first colon only)."
         ),
     ),
 ) -> SpansResponseBody:
