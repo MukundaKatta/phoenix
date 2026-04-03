@@ -607,8 +607,15 @@ class _ToolKwargsConversion:
         ans: _ToolKwargs = {}
         if not obj:
             return ans
+        tools_value = obj["tools"]
+        if isinstance(tools_value, Mapping) and tools_value.get("type") == "vendor":
+            # Vendor passthrough: pass definitions through if targeting OpenAI
+            vendor_sdk = tools_value.get("vendor_sdk")
+            if vendor_sdk == "openai":
+                ans["tools"] = list(tools_value.get("definitions", []))  # type: ignore[arg-type]
+            return ans
         tools: list[ChatCompletionToolParam] = []
-        for tool in obj["tools"]:
+        for tool in tools_value:  # type: ignore[union-attr]
             if tool["type"] == "function":
                 tools.append(_FunctionToolConversion.to_openai(tool))
         if not tools:

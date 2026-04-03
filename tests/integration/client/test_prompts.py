@@ -89,7 +89,7 @@ class PromptToolFunctionInput(BaseModel):
 
 
 class PromptToolsInput(BaseModel):
-    tools: list[PromptToolFunctionInput]
+    functionTools: list[PromptToolFunctionInput] | None = None
     toolChoice: dict[str, Any] | None = None
 
 
@@ -229,7 +229,7 @@ class TestTools:
             for t in types_
         }
         tools = PromptToolsInput(
-            tools=[
+            functionTools=[
                 PromptToolFunctionInput(
                     function=PromptToolFunctionDefinitionInput(
                         name=v["function"]["name"],
@@ -272,7 +272,7 @@ class TestTools:
             for t in types_
         }
         tools = PromptToolsInput(
-            tools=[
+            functionTools=[
                 PromptToolFunctionInput(
                     function=PromptToolFunctionDefinitionInput(
                         name=v["name"],
@@ -316,7 +316,7 @@ class TestToolChoice:
     ) -> None:
         api_key = _app.admin_secret
         tools = PromptToolsInput(
-            tools=[
+            functionTools=[
                 PromptToolFunctionInput(
                     function=PromptToolFunctionDefinitionInput(
                         name=t["function"]["name"],
@@ -353,7 +353,7 @@ class TestToolChoice:
     ) -> None:
         api_key = _app.admin_secret
         tools = PromptToolsInput(
-            tools=[
+            functionTools=[
                 PromptToolFunctionInput(
                     function=PromptToolFunctionDefinitionInput(
                         name=t.__name__,

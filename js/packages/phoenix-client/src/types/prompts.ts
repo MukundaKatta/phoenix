@@ -162,9 +162,9 @@ export type PromptChatMessagePart =
   | components["schemas"]["ToolResultContentPart"];
 
 /**
- * The Phoenix prompt tool type from the API.
+ * The Phoenix prompt tool type from the API (function tools only).
  */
-export type PromptTool = components["schemas"]["PromptTools"]["tools"][number];
+export type PromptTool = components["schemas"]["PromptToolFunction"];
 
 /**
  * The Phoenix prompt tool choice type from the API.

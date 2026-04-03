@@ -87,7 +87,10 @@ export function PlaygroundChatTemplate(props: PlaygroundChatTemplateProps) {
     throw new Error(`Playground instance ${id} not found`);
   }
 
-  const hasTools = !props.disableTools && playgroundInstance.tools.length > 0;
+  const hasTools =
+    !props.disableTools &&
+    (playgroundInstance.tools.length > 0 ||
+      playgroundInstance.vendorTools != null);
   const supportsResponseFormat = !props.disableResponseFormat;
   const hasResponseFormat =
     supportsResponseFormat && playgroundInstance.model.responseFormat != null;

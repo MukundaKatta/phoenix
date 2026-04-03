@@ -85,7 +85,7 @@ const createPromptVersionInput = ({
     invocationParameters: promptInput.invocationParameters,
     tools: toolFunctions.length
       ? {
-          tools: toolFunctions,
+          functionTools: toolFunctions,
           toolChoice: { oneOrMore: true },
         }
       : null,
@@ -253,19 +253,23 @@ export const datasetExampleToEvaluatorInput = ({
 export const inferIncludeExplanationFromPrompt = (
   promptTools?:
     | {
-        readonly tools: ReadonlyArray<{
+        readonly functionTools: ReadonlyArray<{
           readonly function: { readonly parameters: unknown };
-        }>;
+        }> | null;
       }
     | null
     | undefined
 ): boolean => {
-  if (!promptTools || promptTools.tools.length === 0) {
+  if (
+    !promptTools ||
+    !promptTools.functionTools ||
+    promptTools.functionTools.length === 0
+  ) {
     return false;
   }
 
-  const tool = promptTools.tools[0];
-  if (!tool) {
+  const tool = promptTools.functionTools[0];
+  if (!tool?.function) {
     return false;
   }
 

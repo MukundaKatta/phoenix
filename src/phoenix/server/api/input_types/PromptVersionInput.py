@@ -26,6 +26,7 @@ from phoenix.db.types.prompts import (
     PromptToolFunction,
     PromptToolFunctionDefinition,
     PromptTools,
+    PromptVendorTools,
     RoleConversion,
     TextContentPart,
     ToolCallContentPart,
@@ -37,6 +38,7 @@ from phoenix.server.api.exceptions import BadRequest
 from phoenix.server.api.types.GenerativeModelCustomProvider import GenerativeModelCustomProvider
 from phoenix.server.api.types.GenerativeProvider import GenerativeProviderKey
 from phoenix.server.api.types.node import from_global_id_with_expected_type
+from phoenix.server.api.types.PromptTools import ToolVendorSDK
 
 # ---------------------------------------------------------------------------
 # Canonical tool input types  (isomorphic to DB PromptTools / PromptTool*)
@@ -65,6 +67,19 @@ class PromptToolFunctionInput:
 
     def to_orm(self) -> PromptToolFunction:
         return PromptToolFunction(type="function", function=self.function.to_orm())
+
+
+@strawberry.input
+class PromptVendorToolsInput:
+    vendor_sdk: ToolVendorSDK
+    definitions: list[JSON]
+
+    def to_orm(self) -> PromptVendorTools:
+        return PromptVendorTools(
+            type="vendor",
+            vendor_sdk=self.vendor_sdk.value,
+            definitions=self.definitions,
+        )
 
 
 @strawberry.input(one_of=True)
@@ -99,12 +114,28 @@ class PromptToolChoiceInput:
 
 @strawberry.input
 class PromptToolsInput:
-    tools: list[PromptToolFunctionInput]
+    """
+    Tool configuration — set exactly one of function_tools or vendor_tools.
+    tool_choice and disable_parallel_tool_calls apply to both modes.
+    """
+
+    function_tools: Optional[list[PromptToolFunctionInput]] = None
+    vendor_tools: Optional[PromptVendorToolsInput] = None
     tool_choice: Optional[PromptToolChoiceInput] = None
     disable_parallel_tool_calls: Optional[bool] = None
 
+    def __post_init__(self) -> None:
+        if bool(self.function_tools) == bool(self.vendor_tools):
+            raise BadRequest("PromptToolsInput: set exactly one of function_tools or vendor_tools")
+
     def to_orm(self) -> PromptTools:
-        pt = PromptTools(type="tools", tools=[t.to_orm() for t in self.tools])
+        if self.function_tools is not None:
+            tools_value = [t.to_orm() for t in self.function_tools]
+        elif self.vendor_tools is not None:
+            tools_value = self.vendor_tools.to_orm()  # type: ignore[assignment]
+        else:
+            raise BadRequest("PromptToolsInput: set either function_tools or vendor_tools")
+        pt = PromptTools(type="tools", tools=tools_value)
         if self.tool_choice is not None:
             pt.tool_choice = self.tool_choice.to_orm()
         if self.disable_parallel_tool_calls is not None:

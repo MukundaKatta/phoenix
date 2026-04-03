@@ -62,14 +62,19 @@ export const toAnthropic = <V extends Variables = Variables>({
       return anthropicMessage;
     });
 
-    let tools = prompt.tools?.tools.map((tool) => {
-      const anthropicToolDefinition = safelyConvertToolDefinitionToProvider({
-        toolDefinition: tool,
-        targetProvider: "ANTHROPIC",
-      });
-      invariant(anthropicToolDefinition, "Tool definition is not valid");
-      return anthropicToolDefinition;
-    });
+    const toolsList = prompt.tools?.tools;
+    let tools = Array.isArray(toolsList)
+      ? toolsList.map((tool) => {
+          const anthropicToolDefinition = safelyConvertToolDefinitionToProvider(
+            {
+              toolDefinition: tool,
+              targetProvider: "ANTHROPIC",
+            }
+          );
+          invariant(anthropicToolDefinition, "Tool definition is not valid");
+          return anthropicToolDefinition;
+        })
+      : undefined;
     tools = (tools?.length ?? 0) > 0 ? tools : undefined;
 
     let tool_choice: AnthropicToolChoice | undefined =

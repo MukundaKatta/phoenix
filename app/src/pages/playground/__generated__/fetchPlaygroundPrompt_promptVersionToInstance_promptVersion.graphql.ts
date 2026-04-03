@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<44e9479ad34b7cf3f7a33993f420ee11>>
+ * @generated SignedSource<<c16504e8bb6ba0de8164d98c2948b22a>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -12,6 +12,7 @@ import { ReaderInlineDataFragment } from 'relay-runtime';
 export type ModelProvider = "ANTHROPIC" | "AWS" | "AZURE_OPENAI" | "CEREBRAS" | "DEEPSEEK" | "FIREWORKS" | "GOOGLE" | "GROQ" | "MOONSHOT" | "OLLAMA" | "OPENAI" | "PERPLEXITY" | "TOGETHER" | "XAI";
 export type PromptMessageRole = "AI" | "SYSTEM" | "TOOL" | "USER";
 export type PromptToolChoiceType = "NONE" | "ONE_OR_MORE" | "SPECIFIC_FUNCTION" | "ZERO_OR_MORE";
+export type ToolVendorSDK = "ANTHROPIC" | "AWS_BEDROCK" | "GOOGLE_GENAI" | "OPENAI";
 import { FragmentRefs } from "relay-runtime";
 export type fetchPlaygroundPrompt_promptVersionToInstance_promptVersion$data = {
   readonly customProvider: {
@@ -70,18 +71,22 @@ export type fetchPlaygroundPrompt_promptVersionToInstance_promptVersion$data = {
   };
   readonly tools: {
     readonly disableParallelToolCalls: boolean | null;
-    readonly toolChoice: {
-      readonly functionName: string | null;
-      readonly type: PromptToolChoiceType;
-    } | null;
-    readonly tools: ReadonlyArray<{
+    readonly functionTools: ReadonlyArray<{
       readonly function: {
         readonly description: string | null;
         readonly name: string;
         readonly parameters: any;
         readonly strict: boolean | null;
       };
-    }>;
+    }> | null;
+    readonly toolChoice: {
+      readonly functionName: string | null;
+      readonly type: PromptToolChoiceType;
+    } | null;
+    readonly vendorTools: {
+      readonly definitions: ReadonlyArray<any>;
+      readonly vendorSdk: ToolVendorSDK;
+    } | null;
   } | null;
   readonly " $fragmentType": "fetchPlaygroundPrompt_promptVersionToInstance_promptVersion";
 };
@@ -95,6 +100,6 @@ const node: ReaderInlineDataFragment = {
   "name": "fetchPlaygroundPrompt_promptVersionToInstance_promptVersion"
 };
 
-(node as any).hash = "cccc93bf9101868d1ff7d1b69643490b";
+(node as any).hash = "d3046e4233f8e1c42b763924b4376498";
 
 export default node;

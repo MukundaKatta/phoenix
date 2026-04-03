@@ -74,14 +74,17 @@ export const toOpenAI = <V extends Variables = Variables>({
       return openAIMessage;
     });
 
-    let tools = prompt.tools?.tools.map((tool) => {
-      const openAIToolDefinition = safelyConvertToolDefinitionToProvider({
-        toolDefinition: tool,
-        targetProvider: "OPENAI",
-      });
-      invariant(openAIToolDefinition, "Tool definition is not valid");
-      return openAIToolDefinition;
-    });
+    const toolsList = prompt.tools?.tools;
+    let tools = Array.isArray(toolsList)
+      ? toolsList.map((tool) => {
+          const openAIToolDefinition = safelyConvertToolDefinitionToProvider({
+            toolDefinition: tool,
+            targetProvider: "OPENAI",
+          });
+          invariant(openAIToolDefinition, "Tool definition is not valid");
+          return openAIToolDefinition;
+        })
+      : undefined;
     tools = (tools?.length ?? 0) > 0 ? tools : undefined;
 
     let tool_choice: OpenaiToolChoice | undefined =

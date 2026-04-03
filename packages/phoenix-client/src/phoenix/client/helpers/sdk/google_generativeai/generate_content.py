@@ -143,8 +143,18 @@ class _ToolKwargsConversion:
         ans: _ToolKwargs = {}
         if not obj:
             return ans
+        tools_value = obj["tools"]
+        if isinstance(tools_value, Mapping) and tools_value.get("type") == "vendor":
+            vendor_sdk = tools_value.get("vendor_sdk")
+            if vendor_sdk == "google_genai":
+                from google.generativeai.types import content_types
+
+                ans["tools"] = [
+                    content_types.Tool(**defn) for defn in tools_value.get("definitions", [])
+                ]
+            return ans
         function_declarations: list[content_types.FunctionDeclaration] = []
-        for t in obj["tools"]:
+        for t in tools_value:  # type: ignore[union-attr]
             if t["type"] == "function":
                 function_declarations.append(_FunctionDeclarationConversion.to_google(t))
         from google.generativeai.types import content_types

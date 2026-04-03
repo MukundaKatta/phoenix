@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<ccaf5668523fa847d24a4d5bdb6971a4>>
+ * @generated SignedSource<<b77f574d831c3a016de04ae0bedca610>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -12,6 +12,7 @@ import { ConcreteRequest } from 'relay-runtime';
 export type GenerativeProviderKey = "ANTHROPIC" | "AWS" | "AZURE_OPENAI" | "CEREBRAS" | "DEEPSEEK" | "FIREWORKS" | "GOOGLE" | "GROQ" | "MOONSHOT" | "OLLAMA" | "OPENAI" | "PERPLEXITY" | "TOGETHER" | "XAI";
 export type PromptMessageRole = "AI" | "SYSTEM" | "TOOL" | "USER";
 export type PromptTemplateFormat = "F_STRING" | "MUSTACHE" | "NONE";
+export type ToolVendorSDK = "ANTHROPIC" | "AWS_BEDROCK" | "GOOGLE_GENAI" | "OPENAI";
 export type CreateChatPromptVersionInput = {
   promptId: string;
   promptVersion: ChatPromptVersionInput;
@@ -58,8 +59,9 @@ export type ToolResultContentValueInput = {
 };
 export type PromptToolsInput = {
   disableParallelToolCalls?: boolean | null;
+  functionTools?: ReadonlyArray<PromptToolFunctionInput> | null;
   toolChoice?: PromptToolChoiceInput | null;
-  tools: ReadonlyArray<PromptToolFunctionInput>;
+  vendorTools?: PromptVendorToolsInput | null;
 };
 export type PromptToolFunctionInput = {
   function: PromptToolFunctionDefinitionInput;
@@ -69,6 +71,10 @@ export type PromptToolFunctionDefinitionInput = {
   name: string;
   parameters?: any | null;
   strict?: boolean | null;
+};
+export type PromptVendorToolsInput = {
+  definitions: ReadonlyArray<any>;
+  vendorSdk: ToolVendorSDK;
 };
 export type PromptToolChoiceInput = {
   functionName?: string | null;

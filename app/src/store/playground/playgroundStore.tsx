@@ -131,6 +131,7 @@ export const DEFAULT_INSTANCE_PARAMS = () =>
       supportedInvocationParameters: [],
     },
     tools: [],
+    vendorTools: null,
     // Default to auto tool choice as you are probably testing the LLM for it's ability to pick
     toolChoice: { type: "ZERO_OR_MORE" },
     repetitions: {

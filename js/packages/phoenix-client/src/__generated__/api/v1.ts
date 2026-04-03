@@ -2700,11 +2700,31 @@ export interface components {
              */
             type: "tools";
             /** Tools */
-            tools: components["schemas"]["PromptToolFunction"][];
+            tools: components["schemas"]["PromptToolFunction"][] | components["schemas"]["PromptVendorTools"];
             /** Tool Choice */
             tool_choice?: components["schemas"]["PromptToolChoiceNone"] | components["schemas"]["PromptToolChoiceZeroOrMore"] | components["schemas"]["PromptToolChoiceOneOrMore"] | components["schemas"]["PromptToolChoiceSpecificFunctionTool"];
             /** Disable Parallel Tool Calls */
             disable_parallel_tool_calls?: boolean;
+        };
+        /**
+         * PromptVendorTools
+         * @description Raw vendor-specific tools, stored and sent verbatim.
+         */
+        PromptVendorTools: {
+            /**
+             * Type
+             * @constant
+             */
+            type: "vendor";
+            /**
+             * Vendor Sdk
+             * @enum {string}
+             */
+            vendor_sdk: "openai" | "anthropic" | "google_genai" | "aws_bedrock";
+            /** Definitions */
+            definitions: {
+                [key: string]: unknown;
+            }[];
         };
         /** PromptVersion */
         PromptVersion: {

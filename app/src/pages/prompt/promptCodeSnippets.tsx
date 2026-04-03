@@ -282,7 +282,7 @@ const languageConfigs: Record<string, Record<string, LanguageConfig>> = {
 };
 
 type ToolEntry = NonNullable<
-  NonNullable<Parameters<PromptToSDKSnippetFn>[0]["tools"]>["tools"]
+  NonNullable<Parameters<PromptToSDKSnippetFn>[0]["tools"]>["functionTools"]
 >[number];
 type ToolChoiceEntry = NonNullable<
   NonNullable<Parameters<PromptToSDKSnippetFn>[0]["tools"]>["toolChoice"]
@@ -401,10 +401,25 @@ const preparePromptData = (
     args.push(assignmentOperator === "=" ? "messages=messages" : "messages");
   }
 
-  if (prompt.tools && prompt.tools.tools.length > 0) {
-    const toolDefs = prompt.tools.tools.map(serializeTool);
+  if (
+    prompt.tools &&
+    prompt.tools.functionTools &&
+    prompt.tools.functionTools.length > 0
+  ) {
+    const toolDefs = prompt.tools.functionTools.map(serializeTool);
     const fmt = jsonFormatter({
       json: toolDefs,
+      level: 1,
+      removeKeyQuotes,
+    });
+    args.push(`tools${assignmentOperator}${fmt}`);
+  } else if (
+    prompt.tools?.vendorTools &&
+    prompt.tools.vendorTools.definitions.length > 0
+  ) {
+    // Vendor tools: emit raw definitions as-is (already in native format)
+    const fmt = jsonFormatter({
+      json: prompt.tools.vendorTools.definitions,
       level: 1,
       removeKeyQuotes,
     });

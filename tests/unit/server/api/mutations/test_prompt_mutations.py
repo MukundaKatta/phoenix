@@ -43,13 +43,17 @@ class TestPromptMutations:
                 }
                 invocationParameters
                 tools {
-                  tools {
+                  functionTools {
                     function {
                       name
                       description
                       parameters
                       strict
                     }
+                  }
+                  vendorTools {
+                    vendorSdk
+                    definitions
                   }
                   toolChoice {
                     type
@@ -105,13 +109,17 @@ class TestPromptMutations:
                 }
                 invocationParameters
                 tools {
-                  tools {
+                  functionTools {
                     function {
                       name
                       description
                       parameters
                       strict
                     }
+                  }
+                  vendorTools {
+                    vendorSdk
+                    definitions
                   }
                   toolChoice {
                     type
@@ -170,13 +178,17 @@ class TestPromptMutations:
                 }
                 invocationParameters
                 tools {
-                  tools {
+                  functionTools {
                     function {
                       name
                       description
                       parameters
                       strict
                     }
+                  }
+                  vendorTools {
+                    vendorSdk
+                    definitions
                   }
                   toolChoice {
                     type
@@ -250,7 +262,7 @@ class TestPromptMutations:
                             "modelProvider": "OPENAI",
                             "modelName": "gpt-4o",
                             "tools": {
-                                "tools": [
+                                "functionTools": [
                                     {
                                         "function": {
                                             "name": "get_weather",
@@ -267,16 +279,17 @@ class TestPromptMutations:
                                                 "additionalProperties": False,
                                             },
                                             "strict": True,
-                                        },
+                                        }
                                     }
                                 ],
+                                "vendorTools": None,
                                 "toolChoice": None,
                             },
                         },
                     }
                 },
                 {
-                    "tools": [
+                    "functionTools": [
                         {
                             "function": {
                                 "name": "get_weather",
@@ -296,6 +309,7 @@ class TestPromptMutations:
                             }
                         }
                     ],
+                    "vendorTools": None,
                     "toolChoice": None,
                     "disableParallelToolCalls": None,
                 },
@@ -322,7 +336,7 @@ class TestPromptMutations:
                             "modelProvider": "OPENAI",
                             "modelName": "o1-mini",
                             "tools": {
-                                "tools": [
+                                "functionTools": [
                                     {
                                         "function": {
                                             "name": "get_weather",
@@ -330,16 +344,17 @@ class TestPromptMutations:
                                                 "type": "object",
                                                 "properties": {"location": {"type": "string"}},
                                             },
-                                        },
+                                        }
                                     }
                                 ],
+                                "vendorTools": None,
                                 "toolChoice": None,
                             },
                         },
                     }
                 },
                 {
-                    "tools": [
+                    "functionTools": [
                         {
                             "function": {
                                 "name": "get_weather",
@@ -352,6 +367,7 @@ class TestPromptMutations:
                             }
                         }
                     ],
+                    "vendorTools": None,
                     "toolChoice": None,
                     "disableParallelToolCalls": None,
                 },
@@ -378,7 +394,7 @@ class TestPromptMutations:
                             "modelProvider": "ANTHROPIC",
                             "modelName": "claude-2",
                             "tools": {
-                                "tools": [
+                                "functionTools": [
                                     {
                                         "function": {
                                             "name": "get_weather",
@@ -398,16 +414,17 @@ class TestPromptMutations:
                                                 },
                                                 "required": ["location"],
                                             },
-                                        },
+                                        }
                                     }
                                 ],
+                                "vendorTools": None,
                                 "toolChoice": None,
                             },
                         },
                     }
                 },
                 {
-                    "tools": [
+                    "functionTools": [
                         {
                             "function": {
                                 "name": "get_weather",
@@ -431,6 +448,7 @@ class TestPromptMutations:
                             }
                         }
                     ],
+                    "vendorTools": None,
                     "toolChoice": None,
                     "disableParallelToolCalls": None,
                 },
@@ -761,7 +779,7 @@ class TestPromptMutations:
                             "modelProvider": "OPENAI",
                             "modelName": "gpt-4o",
                             "tools": {
-                                "tools": [
+                                "functionTools": [
                                     {
                                         "function": {
                                             "name": "get_weather",
@@ -778,16 +796,17 @@ class TestPromptMutations:
                                                 "additionalProperties": False,
                                             },
                                             "strict": True,
-                                        },
+                                        }
                                     }
                                 ],
+                                "vendorTools": None,
                                 "toolChoice": None,
                             },
                         },
                     }
                 },
                 {
-                    "tools": [
+                    "functionTools": [
                         {
                             "function": {
                                 "name": "get_weather",
@@ -807,6 +826,7 @@ class TestPromptMutations:
                             }
                         }
                     ],
+                    "vendorTools": None,
                     "toolChoice": None,
                     "disableParallelToolCalls": None,
                 },
@@ -832,7 +852,7 @@ class TestPromptMutations:
                             "modelProvider": "OPENAI",
                             "modelName": "o1-mini",
                             "tools": {
-                                "tools": [
+                                "functionTools": [
                                     {
                                         "function": {
                                             "name": "get_weather",
@@ -840,16 +860,17 @@ class TestPromptMutations:
                                                 "type": "object",
                                                 "properties": {"location": {"type": "string"}},
                                             },
-                                        },
+                                        }
                                     }
                                 ],
+                                "vendorTools": None,
                                 "toolChoice": None,
                             },
                         },
                     }
                 },
                 {
-                    "tools": [
+                    "functionTools": [
                         {
                             "function": {
                                 "name": "get_weather",
@@ -862,6 +883,7 @@ class TestPromptMutations:
                             }
                         }
                     ],
+                    "vendorTools": None,
                     "toolChoice": None,
                     "disableParallelToolCalls": None,
                 },
@@ -939,7 +961,7 @@ class TestPromptMutations:
                             "modelProvider": "ANTHROPIC",
                             "modelName": "claude-2",
                             "tools": {
-                                "tools": [
+                                "functionTools": [
                                     {
                                         "function": {
                                             "name": "get_weather",
@@ -959,16 +981,17 @@ class TestPromptMutations:
                                                 },
                                                 "required": ["location"],
                                             },
-                                        },
+                                        }
                                     }
                                 ],
+                                "vendorTools": None,
                                 "toolChoice": None,
                             },
                         },
                     }
                 },
                 {
-                    "tools": [
+                    "functionTools": [
                         {
                             "function": {
                                 "name": "get_weather",
@@ -992,6 +1015,7 @@ class TestPromptMutations:
                             }
                         }
                     ],
+                    "vendorTools": None,
                     "toolChoice": None,
                     "disableParallelToolCalls": None,
                 },
@@ -1168,7 +1192,7 @@ class TestPromptMutations:
                             "modelProvider": "anthropic",  # lowercase → invalid enum
                             "modelName": "claude-2",
                             "tools": {
-                                "tools": [
+                                "functionTools": [
                                     {
                                         "function": {
                                             "name": "get_weather",
@@ -1191,6 +1215,7 @@ class TestPromptMutations:
                                         },
                                     }
                                 ],
+                                "vendorTools": None,
                                 "toolChoice": None,
                             },
                         },

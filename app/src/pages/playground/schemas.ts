@@ -6,10 +6,7 @@ import {
 } from "@arizeai/openinference-semantic-conventions";
 import { z } from "zod";
 
-import {
-  jsonSchemaZodSchema,
-  llmProviderToolDefinitionSchema,
-} from "@phoenix/schemas";
+import { jsonSchemaZodSchema } from "@phoenix/schemas";
 import type { JSONLiteral } from "@phoenix/schemas/jsonLiteralSchema";
 import { jsonLiteralSchema } from "@phoenix/schemas/jsonLiteralSchema";
 import { llmProviderToolCallSchema } from "@phoenix/schemas/toolCallSchemas";
@@ -292,17 +289,12 @@ export const toolJSONSchemaSchema = z
     }
     return json;
   })
-  .transform((o, ctx) => {
-    const { data, success } = llmProviderToolDefinitionSchema.safeParse(o);
-
-    if (!success) {
-      ctx.addIssue({
-        code: "custom",
-        message: "The tool JSON schema must be a valid tool schema",
-      });
-      return z.NEVER;
-    }
-    return data;
+  .transform((o) => {
+    // Return the raw parsed JSON object without running it through
+    // provider-specific schemas. Normalization (canonical vs vendor
+    // passthrough) happens later in processAttributeTools where we
+    // have provider context and can make a better classification.
+    return o;
   });
 
 /**

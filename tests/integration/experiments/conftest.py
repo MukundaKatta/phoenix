@@ -381,7 +381,7 @@ async def _dataset_id(
 def _canonical_prompt_tools(output_name: str) -> dict[str, Any]:
     """Canonical PromptToolsInput format (provider-agnostic)."""
     return {
-        "tools": [
+        "functionTools": [
             {
                 "function": {
                     "name": output_name,

@@ -9470,21 +9470,28 @@
             "title": "Type"
           },
           "tools": {
-            "items": {
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/PromptToolFunction"
-                }
-              ],
-              "discriminator": {
-                "propertyName": "type",
-                "mapping": {
-                  "function": "#/components/schemas/PromptToolFunction"
-                }
+            "anyOf": [
+              {
+                "items": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/PromptToolFunction"
+                    }
+                  ],
+                  "discriminator": {
+                    "propertyName": "type",
+                    "mapping": {
+                      "function": "#/components/schemas/PromptToolFunction"
+                    }
+                  }
+                },
+                "type": "array",
+                "minItems": 1
+              },
+              {
+                "$ref": "#/components/schemas/PromptVendorTools"
               }
-            },
-            "type": "array",
-            "minItems": 1,
+            ],
             "title": "Tools"
           },
           "tool_choice": {
@@ -9525,6 +9532,43 @@
           "tools"
         ],
         "title": "PromptTools"
+      },
+      "PromptVendorTools": {
+        "properties": {
+          "type": {
+            "type": "string",
+            "const": "vendor",
+            "title": "Type"
+          },
+          "vendor_sdk": {
+            "type": "string",
+            "enum": [
+              "openai",
+              "anthropic",
+              "google_genai",
+              "aws_bedrock"
+            ],
+            "title": "Vendor Sdk"
+          },
+          "definitions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "minItems": 1,
+            "title": "Definitions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "type",
+          "vendor_sdk",
+          "definitions"
+        ],
+        "title": "PromptVendorTools",
+        "description": "Raw vendor-specific tools, stored and sent verbatim."
       },
       "PromptVersion": {
         "properties": {

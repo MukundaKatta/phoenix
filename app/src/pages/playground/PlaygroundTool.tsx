@@ -41,7 +41,6 @@ export type BaseToolEditorProps = {
 
 const ToolEditor = (props: BaseToolEditorProps) => {
   switch (props.tool.editorType) {
-    // TODO: add support for other tool types
     case "json":
     default:
       return <JSONToolEditor {...props} />;
@@ -79,25 +78,23 @@ export function PlaygroundTool({
     throw new Error(`Tool ${toolId} not found`);
   }
 
-  const toolDefinition = tool.definition;
-
   const toolName = useMemo(() => {
     return getToolName(tool);
   }, [tool]);
 
   const updateTool = useCallback(
     (display: unknown) => {
-      // Convert provider-specific display value back to canonical before storing.
-      // Guard against null (invalid JSON mid-edit).
       const canonical = displayToCanonicalToolDefinition(display);
       if (canonical == null) return;
+
       updateInstance({
         instanceId: playgroundInstanceId,
         patch: {
           tools: instanceTools.map((t) =>
             t.id === tool.id
               ? {
-                  ...t,
+                  id: tool.id,
+                  editorType: tool.editorType,
                   definition: canonical,
                 }
               : t
@@ -106,7 +103,7 @@ export function PlaygroundTool({
         dirty: true,
       });
     },
-    [instanceTools, playgroundInstanceId, tool.id, updateInstance]
+    [instanceTools, playgroundInstanceId, tool, updateInstance]
   );
 
   const deleteTool = useCallback(() => {
@@ -139,10 +136,9 @@ export function PlaygroundTool({
   ]);
 
   const toolDefinitionDisplay = useMemo(() => {
-    return toolDefinition != null
-      ? getToolDefinitionDisplay(toolDefinition, instanceProvider)
-      : toolDefinition;
-  }, [toolDefinition, instanceProvider]);
+    if (tool.definition == null) return tool.definition;
+    return getToolDefinitionDisplay(tool.definition, instanceProvider);
+  }, [tool, instanceProvider]);
 
   const toolDefinitionString = useMemo(() => {
     return JSON.stringify(toolDefinitionDisplay, null, 2);

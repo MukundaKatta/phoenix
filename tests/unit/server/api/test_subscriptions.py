@@ -486,7 +486,7 @@ class TestChatCompletionSubscription:
                     "modelName": "gpt-4",
                     "invocationParameters": {},
                     "tools": {
-                        "tools": [
+                        "functionTools": [
                             {
                                 "function": {
                                     "name": get_current_weather_tool_schema["function"]["name"],

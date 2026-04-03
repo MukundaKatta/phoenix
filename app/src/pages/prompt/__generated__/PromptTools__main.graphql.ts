@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<f3a0304950e6934472cfc37a67c6f6d1>>
+ * @generated SignedSource<<1012338b76dfc16d6a44737db220bcfd>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,17 +9,22 @@
 // @ts-nocheck
 
 import { ReaderFragment } from 'relay-runtime';
+export type ToolVendorSDK = "ANTHROPIC" | "AWS_BEDROCK" | "GOOGLE_GENAI" | "OPENAI";
 import { FragmentRefs } from "relay-runtime";
 export type PromptTools__main$data = {
   readonly tools: {
-    readonly tools: ReadonlyArray<{
+    readonly functionTools: ReadonlyArray<{
       readonly function: {
         readonly description: string | null;
         readonly name: string;
         readonly parameters: any;
         readonly strict: boolean | null;
       };
-    }>;
+    }> | null;
+    readonly vendorTools: {
+      readonly definitions: ReadonlyArray<any>;
+      readonly vendorSdk: ToolVendorSDK;
+    } | null;
   } | null;
   readonly " $fragmentType": "PromptTools__main";
 };
@@ -47,7 +52,7 @@ const node: ReaderFragment = {
           "args": null,
           "concreteType": "PromptToolFunction",
           "kind": "LinkedField",
-          "name": "tools",
+          "name": "functionTools",
           "plural": true,
           "selections": [
             {
@@ -91,6 +96,31 @@ const node: ReaderFragment = {
             }
           ],
           "storageKey": null
+        },
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "PromptVendorTools",
+          "kind": "LinkedField",
+          "name": "vendorTools",
+          "plural": false,
+          "selections": [
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "vendorSdk",
+              "storageKey": null
+            },
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "definitions",
+              "storageKey": null
+            }
+          ],
+          "storageKey": null
         }
       ],
       "storageKey": null
@@ -100,6 +130,6 @@ const node: ReaderFragment = {
   "abstractKey": null
 };
 
-(node as any).hash = "507119da76561b2b15a57bdd140f7b73";
+(node as any).hash = "d8de758fea477dae217c729628416eb3";
 
 export default node;

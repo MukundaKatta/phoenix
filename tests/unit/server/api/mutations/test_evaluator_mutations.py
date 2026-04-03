@@ -47,7 +47,7 @@ def _canonical_tools(
 ) -> dict[str, Any]:
     """Build a canonical PromptToolsInput dict for a single function tool."""
     return dict(
-        tools=[
+        functionTools=[
             dict(
                 function=dict(
                     name=name,
@@ -89,7 +89,7 @@ def _prompt_tools_to_canonical_input(tools: Any) -> dict[str, Any]:
         else:
             tool_choice = {"none": True}
 
-    return {"tools": tools_list, "toolChoice": tool_choice}
+    return {"functionTools": tools_list, "toolChoice": tool_choice}
 
 
 class TestDatasetLLMEvaluatorMutations:
@@ -1249,7 +1249,7 @@ class TestUpdateDatasetLLMEvaluatorMutation:
                         ),
                         invocationParameters=dict(temperature=0.5),
                         tools=dict(
-                            tools=[
+                            functionTools=[
                                 dict(
                                     function=dict(
                                         name="quality",
@@ -1396,7 +1396,7 @@ class TestUpdateDatasetLLMEvaluatorMutation:
                         ),
                         invocationParameters=dict(temperature=0.7),
                         tools=dict(
-                            tools=[
+                            functionTools=[
                                 dict(
                                     function=dict(
                                         name="result",
@@ -1578,7 +1578,7 @@ class TestUpdateDatasetLLMEvaluatorMutation:
                         ),
                         invocationParameters=dict(temperature=0.5),
                         tools=dict(
-                            tools=[
+                            functionTools=[
                                 dict(
                                     function=dict(
                                         name="result",
@@ -1691,7 +1691,7 @@ class TestUpdateDatasetLLMEvaluatorMutation:
                         ),
                         invocationParameters=dict(temperature=0.8),
                         tools=dict(
-                            tools=[
+                            functionTools=[
                                 dict(
                                     function=dict(
                                         name="result",
@@ -1971,7 +1971,7 @@ class TestUpdateDatasetLLMEvaluatorMutation:
                         ),
                         invocationParameters=dict(temperature=0.0),
                         tools=dict(
-                            tools=[
+                            functionTools=[
                                 dict(
                                     function=dict(
                                         name="correctness",
@@ -3548,7 +3548,7 @@ class TestMultiOutputEvaluators:
                         ),
                         invocationParameters=dict(temperature=0.0),
                         tools=dict(
-                            tools=[
+                            functionTools=[
                                 dict(
                                     function=dict(
                                         name="quality",
@@ -3682,7 +3682,7 @@ class TestMultiOutputEvaluators:
                         ),
                         invocationParameters=dict(temperature=0.0),
                         tools=dict(
-                            tools=[
+                            functionTools=[
                                 dict(
                                     function=dict(
                                         name="quality",

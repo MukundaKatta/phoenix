@@ -94,6 +94,7 @@ const expectedPlaygroundInstanceWithIO: PlaygroundInstance = {
     supportedInvocationParameters: [],
   },
   tools: [],
+  vendorTools: null,
   toolChoice: { type: "ZERO_OR_MORE" },
   repetitions: {
     1: {
@@ -1463,13 +1464,16 @@ describe("getToolsFromAttributes", () => {
 
   test.for(Object.values(ProviderToToolTestMap))(
     "should return %s tools, if they are valid",
-    ([_provider, spanTool, toolDefinition]) => {
+    ([provider, spanTool, toolDefinition]) => {
       const parsedAttributes = {
         llm: {
           tools: [spanTool],
         },
       };
-      const result = getToolsFromAttributes(parsedAttributes);
+      const result = getToolsFromAttributes(
+        parsedAttributes,
+        provider as ModelProvider
+      );
       expect(result).toEqual({
         tools: [
           {
@@ -1478,6 +1482,7 @@ describe("getToolsFromAttributes", () => {
             definition: toolDefinition,
           },
         ],
+        vendorTools: null,
         parsingErrors: [],
       });
     }
@@ -1485,18 +1490,20 @@ describe("getToolsFromAttributes", () => {
 
   it("should return null tools and parsing errors if tools are invalid", () => {
     const parsedAttributes = { llm: { tools: "invalid" } };
-    const result = getToolsFromAttributes(parsedAttributes);
+    const result = getToolsFromAttributes(parsedAttributes, "OPENAI");
     expect(result).toEqual({
       tools: null,
+      vendorTools: null,
       parsingErrors: [TOOLS_PARSING_ERROR],
     });
   });
 
   it("should return null tools and no parsing errors if tools are not present", () => {
     const parsedAttributes = { llm: {} };
-    const result = getToolsFromAttributes(parsedAttributes);
+    const result = getToolsFromAttributes(parsedAttributes, "OPENAI");
     expect(result).toEqual({
       tools: null,
+      vendorTools: null,
       parsingErrors: [],
     });
   });

@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<e36490a4fd929fd92f61b9eab2a4da03>>
+ * @generated SignedSource<<a2da9a5084f4af9e162108a91b0e04a0>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -13,6 +13,7 @@ export type GenerativeProviderKey = "ANTHROPIC" | "AWS" | "AZURE_OPENAI" | "CERE
 export type OptimizationDirection = "MAXIMIZE" | "MINIMIZE" | "NONE";
 export type PromptMessageRole = "AI" | "SYSTEM" | "TOOL" | "USER";
 export type PromptTemplateFormat = "F_STRING" | "MUSTACHE" | "NONE";
+export type ToolVendorSDK = "ANTHROPIC" | "AWS_BEDROCK" | "GOOGLE_GENAI" | "OPENAI";
 export type EvaluatorPreviewsInput = {
   credentials?: ReadonlyArray<GenerativeCredentialInput> | null;
   previews: ReadonlyArray<EvaluatorPreviewItemInput>;
@@ -73,8 +74,9 @@ export type ToolResultContentValueInput = {
 };
 export type PromptToolsInput = {
   disableParallelToolCalls?: boolean | null;
+  functionTools?: ReadonlyArray<PromptToolFunctionInput> | null;
   toolChoice?: PromptToolChoiceInput | null;
-  tools: ReadonlyArray<PromptToolFunctionInput>;
+  vendorTools?: PromptVendorToolsInput | null;
 };
 export type PromptToolFunctionInput = {
   function: PromptToolFunctionDefinitionInput;
@@ -84,6 +86,10 @@ export type PromptToolFunctionDefinitionInput = {
   name: string;
   parameters?: any | null;
   strict?: boolean | null;
+};
+export type PromptVendorToolsInput = {
+  definitions: ReadonlyArray<any>;
+  vendorSdk: ToolVendorSDK;
 };
 export type PromptToolChoiceInput = {
   functionName?: string | null;

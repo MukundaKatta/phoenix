@@ -73,6 +73,7 @@ from phoenix.db.types.model_provider import (
 from phoenix.db.types.prompts import (
     PromptResponseFormat,
     PromptTools,
+    PromptVendorTools,
 )
 from phoenix.server.api.exceptions import BadRequest, NotFound
 from phoenix.server.api.helpers.message_helpers import PlaygroundMessage, PlaygroundToolCall
@@ -220,6 +221,10 @@ class PlaygroundStreamingClient(ABC, Generic[ClientT]):
             attributes=attributes,
             set_status_on_exception=False,  # we set status manually
         )
+        self._attributes = attributes
+        self._raw_output_value: str | None = None
+        text_chunks: list[TextChunk] = []
+        tool_call_chunks: defaultdict[ToolCallID, list[ToolCallChunk]] = defaultdict(list)
         try:
             async for chunk in self._chat_completion_create(
                 messages=messages,
@@ -229,8 +234,24 @@ class PlaygroundStreamingClient(ABC, Generic[ClientT]):
                 span=span,
                 stream_model_output=stream_model_output,
             ):
-                yield chunk
+                if isinstance(chunk, TextChunk):
+                    text_chunks.append(chunk)
+                    yield chunk
+                elif isinstance(chunk, ToolCallChunk):
+                    tool_call_chunks[chunk.id].append(chunk)
+                    yield chunk
+
             span.set_status(Status(StatusCode.OK))
+            # Always set structured llm.output_messages from chunks when available.
+            if text_chunks or tool_call_chunks:
+                span.set_attributes(dict(_llm_output_messages(text_chunks, tool_call_chunks)))
+            # Set output.value: prefer raw vendor response, fall back to chunk reconstruction.
+            if self._raw_output_value:
+                span.set_attribute(OUTPUT_VALUE, self._raw_output_value)
+                span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+            elif text_chunks or tool_call_chunks:
+                if output_attrs := _output_attributes(text_chunks, tool_call_chunks):
+                    span.set_attributes(output_attrs)
         except Exception as e:
             span.set_status(Status(StatusCode.ERROR, str(e)))
             span.record_exception(e)
@@ -465,9 +486,11 @@ class OpenAIBaseStreamingClient(PlaygroundStreamingClient["AsyncOpenAI"]):
                     assert_never(tc.type)
             if tools.disable_parallel_tool_calls:
                 params["parallel_tool_calls"] = False
-            if dt := tools.tools:
+            if isinstance(tools.tools, PromptVendorTools):
+                params["tools"] = tools.tools.definitions  # type: ignore[typeddict-item]
+            elif tools.tools:
                 tool_list: list[ChatCompletionFunctionToolParam] = []
-                for tool in dt:
+                for tool in tools.tools:
                     f = tool.function
                     fn_def = FunctionDefinition(
                         name=f.name,
@@ -677,9 +700,11 @@ class OpenAIBaseStreamingClient(PlaygroundStreamingClient["AsyncOpenAI"]):
                     assert_never(tc.type)
             if tools.disable_parallel_tool_calls:
                 params["parallel_tool_calls"] = False
-            if dt := tools.tools:
+            if isinstance(tools.tools, PromptVendorTools):
+                params["tools"] = tools.tools.definitions  # type: ignore[typeddict-item]
+            elif tools.tools:
                 resp_tool_list: list[FunctionToolParam] = []
-                for tool in dt:
+                for tool in tools.tools:
                     f = tool.function
                     t = FunctionToolParam(
                         type="function",
@@ -800,8 +825,7 @@ class OpenAIBaseStreamingClient(PlaygroundStreamingClient["AsyncOpenAI"]):
                 )
                 if completion.usage is not None:
                     span.set_attributes(dict(self._llm_token_counts(completion.usage)))
-                span.set_attribute(OUTPUT_VALUE, completion.model_dump_json(exclude_none=True))
-                span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+                self._raw_output_value = completion.model_dump_json(exclude_none=True)
                 for chunk in self._chunks_from_openai_chat_completion(completion):
                     if isinstance(chunk, TextChunk):
                         text_chunks.append(chunk)
@@ -989,10 +1013,7 @@ class OpenAIBaseStreamingClient(PlaygroundStreamingClient["AsyncOpenAI"]):
                         tool_call_chunks[chunk.id].append(chunk)
                     yield chunk
             if completed_response is not None:
-                span.set_attribute(
-                    OUTPUT_VALUE, completed_response.model_dump_json(exclude_none=True)
-                )
-                span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+                self._raw_output_value = completed_response.model_dump_json(exclude_none=True)
                 span.set_attributes(
                     dict(_ResponsesApiAttributes._get_attributes_from_response(completed_response))
                 )
@@ -1210,8 +1231,7 @@ class OpenAIBaseStreamingClient(PlaygroundStreamingClient["AsyncOpenAI"]):
                     assert_never(event.type)
 
         if completed_response is not None:
-            span.set_attribute(OUTPUT_VALUE, completed_response.model_dump_json(exclude_none=True))
-            span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+            self._raw_output_value = completed_response.model_dump_json(exclude_none=True)
             span.set_attributes(
                 dict(_ResponsesApiAttributes._get_attributes_from_response(completed_response))
             )
@@ -1672,18 +1692,21 @@ class BedrockStreamingClient(PlaygroundStreamingClient["BedrockRuntimeClient"]):
             request["inferenceConfig"] = inference_config
 
         if tools:
-            tool_list: list[ToolTypeDef] = []
-            for tool in tools.tools:
-                fn = tool.function
-                tool_spec = ToolSpecificationTypeDef(
-                    name=fn.name,
-                    inputSchema=ToolInputSchemaTypeDef(
-                        json=fn.parameters if fn.parameters else {"type": "object"}
-                    ),
-                )
-                if fn.description:
-                    tool_spec["description"] = fn.description
-                tool_list.append(ToolTypeDef(toolSpec=tool_spec))
+            if isinstance(tools.tools, PromptVendorTools):
+                tool_list: list[ToolTypeDef] = tools.tools.definitions  # type: ignore[assignment]
+            else:
+                tool_list = []
+                for tool in tools.tools:
+                    fn = tool.function
+                    tool_spec = ToolSpecificationTypeDef(
+                        name=fn.name,
+                        inputSchema=ToolInputSchemaTypeDef(
+                            json=fn.parameters if fn.parameters else {"type": "object"}
+                        ),
+                    )
+                    if fn.description:
+                        tool_spec["description"] = fn.description
+                    tool_list.append(ToolTypeDef(toolSpec=tool_spec))
 
             tool_config = ToolConfigurationTypeDef(tools=tool_list)
 
@@ -1799,8 +1822,7 @@ class BedrockStreamingClient(PlaygroundStreamingClient["BedrockRuntimeClient"]):
             )
             if not stream_model_output:
                 converse_response = await client.converse(**request)
-                span.set_attribute(OUTPUT_VALUE, safe_json_dumps(converse_response))
-                span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+                self._raw_output_value = safe_json_dumps(converse_response)
                 for chunk in self._chunks_from_converse_response(converse_response, span):
                     if isinstance(chunk, TextChunk):
                         text_chunks.append(chunk)
@@ -2447,9 +2469,11 @@ class AnthropicStreamingClient(PlaygroundStreamingClient["AsyncAnthropic"]):
                 params["tool_choice"] = ToolChoiceAutoParam(
                     type="auto", disable_parallel_tool_use=True
                 )
-            if dt := tools.tools:
+            if isinstance(tools.tools, PromptVendorTools):
+                params["tools"] = tools.tools.definitions  # type: ignore[typeddict-item]
+            elif tools.tools:
                 tool_list: list[ToolParam] = []
-                for tool in dt:
+                for tool in tools.tools:
                     f = tool.function
                     t = ToolParam(
                         input_schema=f.parameters if f.parameters else {"type": "object"},
@@ -2578,8 +2602,7 @@ class AnthropicStreamingClient(PlaygroundStreamingClient["AsyncAnthropic"]):
                 message = await client.messages.create(**params)
                 if message.usage:
                     self._anthropic_apply_usage_to_span(span, message.usage)
-                span.set_attribute(OUTPUT_VALUE, message.model_dump_json(exclude_none=True))
-                span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+                self._raw_output_value = message.model_dump_json(exclude_none=True)
                 for block in message.content:
                     if block.type == "text":
                         tc = TextChunk(content=block.text)
@@ -2634,10 +2657,7 @@ class AnthropicStreamingClient(PlaygroundStreamingClient["AsyncAnthropic"]):
                     text_chunks.append(tc)
                     yield tc
                 elif event.type == "message_stop":
-                    span.set_attribute(
-                        OUTPUT_VALUE, event.message.model_dump_json(exclude_none=True)
-                    )
-                    span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+                    self._raw_output_value = event.message.model_dump_json(exclude_none=True)
                     usage = event.message.usage
                     output_token_counts: dict[str, Any] = {}
                     if usage.output_tokens:
@@ -2904,10 +2924,14 @@ class GoogleStreamingClient(PlaygroundStreamingClient["GoogleAsyncClient"]):
 
         google_tools: list[types.Tool] | None = None
         google_tool_config: types.ToolConfig | None = None
+        has_function_declarations = False
         if tools:
-            if dt := tools.tools:
+            if isinstance(tools.tools, PromptVendorTools):
+                google_tools = [types.Tool(**defn) for defn in tools.tools.definitions]
+            elif tools.tools:
+                has_function_declarations = True
                 function_declarations = []
-                for tool in dt:
+                for tool in tools.tools:
                     fn = tool.function
                     fd_kwargs: dict[str, Any] = {"name": fn.name}
                     if fn.description:
@@ -2917,7 +2941,9 @@ class GoogleStreamingClient(PlaygroundStreamingClient["GoogleAsyncClient"]):
                     function_declarations.append(types.FunctionDeclaration(**fd_kwargs))
                 google_tools = [types.Tool(function_declarations=function_declarations)]
 
-            if tc := tools.tool_choice:
+            # function_calling_config only applies when function_declarations
+            # are present — Google rejects it for built-in tools like google_search.
+            if has_function_declarations and (tc := tools.tool_choice):
                 if tc.type == "none":
                     fcc = types.FunctionCallingConfig(mode=types.FunctionCallingConfigMode.NONE)
                 elif tc.type == "zero_or_more":
@@ -3129,8 +3155,7 @@ class GoogleStreamingClient(PlaygroundStreamingClient["GoogleAsyncClient"]):
                     contents=contents,
                     config=config,
                 )
-                span.set_attribute(OUTPUT_VALUE, response.model_dump_json(exclude_none=True))
-                span.set_attribute(OUTPUT_MIME_TYPE, OpenInferenceMimeTypeValues.JSON.value)
+                self._raw_output_value = response.model_dump_json(exclude_none=True)
                 for chunk in self._iter_gemini_response_chunks(response, span):
                     if isinstance(chunk, TextChunk):
                         text_chunks.append(chunk)

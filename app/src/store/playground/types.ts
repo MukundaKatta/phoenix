@@ -136,12 +136,31 @@ export type ModelInvocationParameterInput =
   ModelConfig["invocationParameters"][number];
 
 /**
- * The type of a tool in the playground
+ * A tool in the playground with a canonical (provider-agnostic) definition.
  */
 export type Tool = {
   id: number;
   editorType: PhoenixToolEditorType;
   definition: CanonicalToolDefinition;
+};
+
+/**
+ * Vendor SDK identifiers for passthrough tools.
+ * Matches the backend ToolVendorSDK enum values.
+ */
+export type ToolVendorSDK =
+  | "OPENAI"
+  | "ANTHROPIC"
+  | "GOOGLE_GENAI"
+  | "AWS_BEDROCK";
+
+/**
+ * Vendor-specific tools stored as raw JSON definitions.
+ * Phoenix does not interpret or validate these — they are stored and sent verbatim.
+ */
+export type VendorTools = {
+  vendorSdk: ToolVendorSDK;
+  definitions: Record<string, unknown>[];
 };
 
 export type PlaygroundInstancePrompt = {
@@ -232,6 +251,12 @@ export interface PlaygroundInstance {
   id: number;
   template: PlaygroundTemplate;
   tools: Tool[];
+  /**
+   * Vendor-specific tools loaded from a span or prompt that don't fit the
+   * canonical function-tool model (e.g. OpenAI namespace tools, tool_search).
+   * Stored and sent to the server verbatim.
+   */
+  vendorTools?: VendorTools | null;
   /**
    * How the LLM should choose the tool to use (canonical, provider-agnostic).
    * @default { type: "ZERO_OR_MORE" } (auto)

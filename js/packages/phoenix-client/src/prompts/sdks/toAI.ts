@@ -68,9 +68,10 @@ export const toAI = <V extends Variables>({
     });
 
     let tools: ToolSet | undefined;
-    if (prompt.tools?.tools && prompt.tools.tools.length > 0) {
+    const toolsList = prompt.tools?.tools;
+    if (toolsList && Array.isArray(toolsList) && toolsList.length > 0) {
       const toolsRecord: Record<string, unknown> = {};
-      for (const tool of prompt.tools.tools) {
+      for (const tool of toolsList) {
         const name = findToolDefinitionName(tool);
         invariant(name, "Tool definition name is not valid");
         const converted = safelyConvertToolDefinitionToProvider({

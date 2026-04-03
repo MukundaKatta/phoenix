@@ -1,12 +1,40 @@
-import { Button, Flex, Icon, Icons } from "@phoenix/components";
+import {
+  Button,
+  Flex,
+  Icon,
+  Icons,
+  Menu,
+  MenuContainer,
+  MenuItem,
+  MenuTrigger,
+} from "@phoenix/components";
 import { usePlaygroundContext } from "@phoenix/contexts/PlaygroundContext";
 import type {
   CanonicalResponseFormat,
   PlaygroundNormalizedInstance,
 } from "@phoenix/store";
 import { generateMessageId } from "@phoenix/store";
+import type { ToolVendorSDK } from "@phoenix/store/playground";
 
-import { createTool } from "./playgroundUtils";
+import { createTool, providerToVendorSDK } from "./playgroundUtils";
+
+/**
+ * Minimal web search tool definition per vendor SDK.
+ * Used as the default template when a user adds vendor tools.
+ */
+function defaultVendorSearchTool(sdk: ToolVendorSDK): Record<string, unknown> {
+  switch (sdk) {
+    case "ANTHROPIC":
+      return { type: "web_search_20250305", name: "web_search" };
+    case "GOOGLE_GENAI":
+      return { google_search: {} };
+    case "AWS_BEDROCK":
+      return { systemTool: { name: "nova_grounding" } };
+    case "OPENAI":
+    default:
+      return { type: "web_search" };
+  }
+}
 
 const DEFAULT_RESPONSE_FORMAT: CanonicalResponseFormat = {
   type: "json_schema",
@@ -55,6 +83,44 @@ export function PlaygroundChatTemplateFooter({
   }
 
   const supportsToolChoice = !disableNewTool;
+  const hasFunctionTools = playgroundInstance.tools.length > 0;
+  const hasVendorTools = playgroundInstance.vendorTools != null;
+  const hasAnyTools = hasFunctionTools || hasVendorTools;
+
+  const addFunctionTool = () => {
+    const patch: Partial<PlaygroundNormalizedInstance> = {
+      tools: [
+        ...playgroundInstance.tools,
+        createTool({
+          toolNumber: playgroundInstance.tools.length + 1,
+        }),
+      ],
+    };
+    if (playgroundInstance.tools.length === 0) {
+      patch.toolChoice = { type: "ZERO_OR_MORE" };
+    }
+    updateInstance({
+      instanceId,
+      patch,
+      dirty: true,
+    });
+  };
+
+  const addVendorTools = () => {
+    const vendorSdk = providerToVendorSDK(playgroundInstance.model.provider);
+    updateInstance({
+      instanceId,
+      patch: {
+        vendorTools: {
+          vendorSdk,
+          definitions: [defaultVendorSearchTool(vendorSdk)],
+        },
+        toolChoice: { type: "ZERO_OR_MORE" },
+      },
+      dirty: true,
+    });
+  };
+
   return (
     <Flex
       direction="row"
@@ -82,31 +148,44 @@ export function PlaygroundChatTemplateFooter({
         </Button>
       ) : null}
       {supportsToolChoice ? (
-        <Button
-          aria-label="add tool"
-          size="S"
-          leadingVisual={<Icon svg={<Icons.PlusOutline />} />}
-          onPress={() => {
-            const patch: Partial<PlaygroundNormalizedInstance> = {
-              tools: [
-                ...playgroundInstance.tools,
-                createTool({
-                  toolNumber: playgroundInstance.tools.length + 1,
-                }),
-              ],
-            };
-            if (playgroundInstance.tools.length === 0) {
-              patch.toolChoice = { type: "ZERO_OR_MORE" };
-            }
-            updateInstance({
-              instanceId,
-              patch,
-              dirty: true,
-            });
-          }}
-        >
-          Tool
-        </Button>
+        hasAnyTools ? (
+          // One track is active — show simple button for that track only
+          hasFunctionTools ? (
+            <Button
+              aria-label="add tool"
+              size="S"
+              leadingVisual={<Icon svg={<Icons.PlusOutline />} />}
+              onPress={addFunctionTool}
+            >
+              Tool
+            </Button>
+          ) : null
+        ) : (
+          // No tools yet — show dropdown to pick a track
+          <MenuTrigger>
+            <Button
+              aria-label="add tool"
+              size="S"
+              leadingVisual={<Icon svg={<Icons.PlusOutline />} />}
+            >
+              Tool
+            </Button>
+            <MenuContainer>
+              <Menu
+                onAction={(key) => {
+                  if (key === "function") {
+                    addFunctionTool();
+                  } else if (key === "vendor") {
+                    addVendorTools();
+                  }
+                }}
+              >
+                <MenuItem id="function">Function tool</MenuItem>
+                <MenuItem id="vendor">Vendor tools (JSON)</MenuItem>
+              </Menu>
+            </MenuContainer>
+          </MenuTrigger>
+        )
       ) : null}
       <Button
         aria-label="add message"

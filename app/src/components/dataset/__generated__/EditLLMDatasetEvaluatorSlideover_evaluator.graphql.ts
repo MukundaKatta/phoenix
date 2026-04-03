@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<af3411c80f6fd2820d8f6433aeeb0e2c>>
+ * @generated SignedSource<<45bf6cbb651a68c853649ef55af80864>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -31,11 +31,11 @@ export type EditLLMDatasetEvaluatorSlideover_evaluator$data = {
     };
     readonly promptVersion?: {
       readonly tools: {
-        readonly tools: ReadonlyArray<{
+        readonly functionTools: ReadonlyArray<{
           readonly function: {
             readonly parameters: any;
           };
-        }>;
+        }> | null;
       } | null;
       readonly " $fragmentSpreads": FragmentRefs<"fetchPlaygroundPrompt_promptVersionToInstance_promptVersion">;
     };
@@ -289,7 +289,7 @@ return {
                       "args": null,
                       "concreteType": "PromptToolFunction",
                       "kind": "LinkedField",
-                      "name": "tools",
+                      "name": "functionTools",
                       "plural": true,
                       "selections": [
                         {
@@ -543,7 +543,7 @@ return {
                           "args": null,
                           "concreteType": "PromptToolFunction",
                           "kind": "LinkedField",
-                          "name": "tools",
+                          "name": "functionTools",
                           "plural": true,
                           "selections": [
                             {
@@ -559,6 +559,31 @@ return {
                                 (v6/*: any*/),
                                 (v7/*: any*/)
                               ],
+                              "storageKey": null
+                            }
+                          ],
+                          "storageKey": null
+                        },
+                        {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "PromptVendorTools",
+                          "kind": "LinkedField",
+                          "name": "vendorTools",
+                          "plural": false,
+                          "selections": [
+                            {
+                              "alias": null,
+                              "args": null,
+                              "kind": "ScalarField",
+                              "name": "vendorSdk",
+                              "storageKey": null
+                            },
+                            {
+                              "alias": null,
+                              "args": null,
+                              "kind": "ScalarField",
+                              "name": "definitions",
                               "storageKey": null
                             }
                           ],
@@ -619,6 +644,6 @@ return {
 };
 })();
 
-(node as any).hash = "b9394d8ae53a21cc3fe790aa423c6ff8";
+(node as any).hash = "197420d148ea23c450e612dc62a286c4";
 
 export default node;

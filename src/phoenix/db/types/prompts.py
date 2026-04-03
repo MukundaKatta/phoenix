@@ -7,6 +7,13 @@ from typing_extensions import Annotated, Self, TypeAlias, TypeGuard, assert_neve
 from phoenix.db.types.db_helper_types import UNDEFINED, DBBaseModel
 from phoenix.db.types.model_provider import ModelProvider
 
+ToolVendorSDK: TypeAlias = Literal[
+    "openai",
+    "anthropic",
+    "google_genai",
+    "aws_bedrock",
+]
+
 JSONSerializable = Union[None, bool, int, float, str, dict[str, Any], list[Any]]
 
 
@@ -134,7 +141,17 @@ class PromptToolFunction(DBBaseModel):
     function: PromptToolFunctionDefinition
 
 
+# Discriminated union of normalized tool types. Add new variants here
+# (e.g. PromptToolWebSearch) to extend the canonical tool model.
 PromptTool: TypeAlias = Annotated[Union[PromptToolFunction], Field(..., discriminator="type")]
+
+
+class PromptVendorTools(DBBaseModel):
+    """Raw vendor-specific tools, stored and sent verbatim."""
+
+    type: Literal["vendor"]
+    vendor_sdk: ToolVendorSDK
+    definitions: Annotated[list[dict[str, Any]], Field(..., min_length=1)]
 
 
 class PromptToolChoiceNone(DBBaseModel):
@@ -167,7 +184,7 @@ PromptToolChoice: TypeAlias = Annotated[
 
 class PromptTools(DBBaseModel):
     type: Literal["tools"]
-    tools: Annotated[list[PromptTool], Field(..., min_length=1)]
+    tools: Annotated[list[PromptTool], Field(..., min_length=1)] | PromptVendorTools
     tool_choice: PromptToolChoice = UNDEFINED
     disable_parallel_tool_calls: bool = UNDEFINED
 

@@ -44,7 +44,7 @@ export function LLMDatasetEvaluatorDetails({
               modelName
               modelProvider
               tools {
-                tools {
+                functionTools {
                   function {
                     parameters
                   }

@@ -31,13 +31,17 @@ export function PromptTools({
     graphql`
       fragment PromptTools__main on PromptVersion {
         tools {
-          tools {
+          functionTools {
             function {
               name
               description
               parameters
               strict
             }
+          }
+          vendorTools {
+            vendorSdk
+            definitions
           }
         }
       }
@@ -47,7 +51,7 @@ export function PromptTools({
 
   const items: ToolDefinitionItem[] = useMemo(() => {
     if (!toolsData) return [];
-    return toolsData.tools.map((tool, i) => {
+    const functionItems = (toolsData.functionTools ?? []).map((tool, i) => {
       const fn = tool.function;
       const definition = { type: "function", function: fn };
       return {
@@ -56,6 +60,27 @@ export function PromptTools({
         definition: safelyStringifyJSON(definition, null, 2).json || "{}",
       };
     });
+    if (toolsData.vendorTools) {
+      const vendorItems = toolsData.vendorTools.definitions.map(
+        (def: unknown, i: number) => {
+          const obj = def as Record<string, unknown>;
+          const name =
+            (typeof obj.name === "string" && obj.name) ||
+            (typeof obj.type === "string" && obj.type) ||
+            // Google tools are bags of capabilities keyed by name
+            // e.g. { google_search: {}, code_execution: {} }
+            Object.keys(obj).join(", ") ||
+            `Vendor tool ${i + 1}`;
+          return {
+            name,
+            description: `${toolsData.vendorTools?.vendorSdk ?? "vendor"} tool`,
+            definition: safelyStringifyJSON(def, null, 2).json || "{}",
+          };
+        }
+      );
+      return [...functionItems, ...vendorItems];
+    }
+    return functionItems;
   }, [toolsData]);
 
   if (items.length === 0) {

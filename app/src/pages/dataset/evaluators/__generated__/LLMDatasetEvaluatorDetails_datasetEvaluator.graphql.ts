@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<11c44e74ccd63a0bda610b23c7758f40>>
+ * @generated SignedSource<<b2262f85bc3dc7b10ef9ac906c7a6950>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -24,11 +24,11 @@ export type LLMDatasetEvaluatorDetails_datasetEvaluator$data = {
       readonly modelName: string;
       readonly modelProvider: ModelProvider;
       readonly tools: {
-        readonly tools: ReadonlyArray<{
+        readonly functionTools: ReadonlyArray<{
           readonly function: {
             readonly parameters: any;
           };
-        }>;
+        }> | null;
       } | null;
       readonly " $fragmentSpreads": FragmentRefs<"PromptChatMessagesCard__main" | "fetchPlaygroundPrompt_promptVersionToInstance_promptVersion">;
     };
@@ -216,7 +216,7 @@ return {
                       "args": null,
                       "concreteType": "PromptToolFunction",
                       "kind": "LinkedField",
-                      "name": "tools",
+                      "name": "functionTools",
                       "plural": true,
                       "selections": [
                         {
@@ -458,7 +458,7 @@ return {
                           "args": null,
                           "concreteType": "PromptToolFunction",
                           "kind": "LinkedField",
-                          "name": "tools",
+                          "name": "functionTools",
                           "plural": true,
                           "selections": [
                             {
@@ -474,6 +474,31 @@ return {
                                 (v5/*: any*/),
                                 (v7/*: any*/)
                               ],
+                              "storageKey": null
+                            }
+                          ],
+                          "storageKey": null
+                        },
+                        {
+                          "alias": null,
+                          "args": null,
+                          "concreteType": "PromptVendorTools",
+                          "kind": "LinkedField",
+                          "name": "vendorTools",
+                          "plural": false,
+                          "selections": [
+                            {
+                              "alias": null,
+                              "args": null,
+                              "kind": "ScalarField",
+                              "name": "vendorSdk",
+                              "storageKey": null
+                            },
+                            {
+                              "alias": null,
+                              "args": null,
+                              "kind": "ScalarField",
+                              "name": "definitions",
                               "storageKey": null
                             }
                           ],
@@ -619,6 +644,6 @@ return {
 };
 })();
 
-(node as any).hash = "20f8bb8f0ce840a6a32db31bb27731dd";
+(node as any).hash = "728d16ad5c6db0d417d60932f5f426b7";
 
 export default node;

@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<92c5fe412a1db375fe6bb3d12ad99aae>>
+ * @generated SignedSource<<f48294ba8bbc79bf44f2a55e6fc20944>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -15,6 +15,7 @@ export type OpenAIApiType = "CHAT_COMPLETIONS" | "RESPONSES";
 export type OptimizationDirection = "MAXIMIZE" | "MINIMIZE" | "NONE";
 export type PromptMessageRole = "AI" | "SYSTEM" | "TOOL" | "USER";
 export type PromptTemplateFormat = "F_STRING" | "MUSTACHE" | "NONE";
+export type ToolVendorSDK = "ANTHROPIC" | "AWS_BEDROCK" | "GOOGLE_GENAI" | "OPENAI";
 export type ChatCompletionOverDatasetInput = {
   appendedMessagesPath?: string | null;
   connectionConfig?: ConnectionConfigInput | null;
@@ -78,8 +79,9 @@ export type ToolResultContentValueInput = {
 };
 export type PromptToolsInput = {
   disableParallelToolCalls?: boolean | null;
+  functionTools?: ReadonlyArray<PromptToolFunctionInput> | null;
   toolChoice?: PromptToolChoiceInput | null;
-  tools: ReadonlyArray<PromptToolFunctionInput>;
+  vendorTools?: PromptVendorToolsInput | null;
 };
 export type PromptToolFunctionInput = {
   function: PromptToolFunctionDefinitionInput;
@@ -89,6 +91,10 @@ export type PromptToolFunctionDefinitionInput = {
   name: string;
   parameters?: any | null;
   strict?: boolean | null;
+};
+export type PromptVendorToolsInput = {
+  definitions: ReadonlyArray<any>;
+  vendorSdk: ToolVendorSDK;
 };
 export type PromptToolChoiceInput = {
   functionName?: string | null;

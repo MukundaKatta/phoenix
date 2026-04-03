@@ -51,6 +51,8 @@ import type {
   PlaygroundNormalizedInstance,
   PlaygroundStore,
   Tool,
+  ToolVendorSDK,
+  VendorTools,
 } from "@phoenix/store/playground";
 import {
   createNormalizedPlaygroundInstance,
@@ -870,57 +872,114 @@ export function getResponseFormatFromAttributes(
 }
 
 /**
- * Processes the tools from the span attributes to be used in the playground.
- * Provider-specific formats (Gemini, Anthropic, AWS, etc.) are preserved as-is.
- * OpenAI Responses API tools are normalized to Chat Completions format since
- * the playground only supports Chat Completions tools for now.
- * @param tools tools from the span attributes
- * @returns playground tools
+ * Map a ModelProvider to the ToolVendorSDK used for passthrough tools.
+ * Many providers share the OpenAI SDK wire format.
  */
-function processAttributeTools(tools: LlmToolSchema): Tool[] {
-  return (tools?.llm?.tools ?? [])
-    .map((tool) => {
-      if (tool?.tool == null) {
-        return null;
-      }
-      const rawDefinition = tool.tool.json_schema;
-      // Normalize to canonical hub form (OpenAI Responses API → Chat Completions
-      // is handled transparently by toCanonicalToolDefinition).
-      const definition = toCanonicalToolDefinition(rawDefinition);
-      if (definition == null) {
-        return null;
-      }
-      return {
+export function providerToVendorSDK(provider: ModelProvider): ToolVendorSDK {
+  switch (provider) {
+    case "ANTHROPIC":
+      return "ANTHROPIC";
+    case "GOOGLE":
+      return "GOOGLE_GENAI";
+    case "AWS":
+      return "AWS_BEDROCK";
+    default:
+      return "OPENAI";
+  }
+}
+
+/**
+ * Processes the tools from the span attributes to be used in the playground.
+ * Tools that can be normalized to the canonical function-tool format are returned
+ * as `Tool[]`; tools that cannot (vendor-specific types like OpenAI namespace,
+ * tool_search, etc.) are collected into a `VendorTools` passthrough block.
+ *
+ * @param tools tools from the span attributes
+ * @param provider the model provider, used to tag vendor passthrough tools
+ * @returns canonical function tools and optional vendor passthrough tools
+ */
+function processAttributeTools(
+  tools: LlmToolSchema,
+  provider: ModelProvider
+): { functionTools: Tool[]; vendorTools: VendorTools | null } {
+  const functionTools: Tool[] = [];
+  const passthroughDefinitions: Record<string, unknown>[] = [];
+
+  for (const tool of tools?.llm?.tools ?? []) {
+    if (tool?.tool == null) {
+      continue;
+    }
+    const rawDefinition = tool.tool.json_schema;
+    if (
+      rawDefinition == null ||
+      typeof rawDefinition !== "object" ||
+      Array.isArray(rawDefinition)
+    ) {
+      continue;
+    }
+    const raw = rawDefinition as Record<string, unknown>;
+
+    // Try to normalize to canonical function tool form.
+    // toCanonicalToolDefinition uses .strict() on provider schemas so that
+    // vendor-specific tools with extra keys (e.g. type: "web_search") fail
+    // parsing rather than being silently matched and stripped.
+    const definition = toCanonicalToolDefinition(rawDefinition);
+    if (definition != null) {
+      functionTools.push({
         id: generateToolId(),
         editorType: "json",
         definition,
-      } satisfies Tool;
-    })
-    .filter((tool): tool is NonNullable<typeof tool> => tool != null);
+      });
+    } else {
+      // Not a recognized function tool — store as vendor passthrough
+      passthroughDefinitions.push(raw);
+    }
+  }
+
+  const vendorTools: VendorTools | null =
+    passthroughDefinitions.length > 0
+      ? {
+          vendorSdk: providerToVendorSDK(provider),
+          definitions: passthroughDefinitions,
+        }
+      : null;
+
+  return { functionTools, vendorTools };
 }
 
 /**
  * Attempts to get llm.tools from the span attributes.
  * @param parsedAttributes the JSON parsed span attributes
+ * @param provider the model provider, used to tag vendor passthrough tools
  * @returns the tools from the span attributes
  *
  * NB: Only exported for testing
  */
 export function getToolsFromAttributes(
-  parsedAttributes: unknown
+  parsedAttributes: unknown,
+  provider: ModelProvider
 ):
-  | { tools: Tool[]; parsingErrors: never[] }
-  | { tools: null; parsingErrors: string[] } {
+  | {
+      tools: Tool[];
+      vendorTools: VendorTools | null;
+      parsingErrors: never[];
+    }
+  | { tools: null; vendorTools: null; parsingErrors: string[] } {
   const { data, success } = llmToolSchema.safeParse(parsedAttributes);
 
   if (!success) {
-    return { tools: null, parsingErrors: [TOOLS_PARSING_ERROR] };
+    return {
+      tools: null,
+      vendorTools: null,
+      parsingErrors: [TOOLS_PARSING_ERROR],
+    };
   }
   // If there are no tools or llm attributes, we don't want to return parsing errors, it just means the span didn't have tools
   if (data?.llm?.tools == null) {
-    return { tools: null, parsingErrors: [] };
+    return { tools: null, vendorTools: null, parsingErrors: [] };
   }
-  return { tools: processAttributeTools(data), parsingErrors: [] };
+  const { functionTools, vendorTools } = processAttributeTools(data, provider);
+  return { tools: functionTools, vendorTools, parsingErrors: [] };
 }
 
 export function getPromptTemplateVariablesFromAttributes(
@@ -1067,8 +1126,11 @@ export function transformSpanAttributesToPlaygroundInstance(
         }
       : null;
 
-  const { tools, parsingErrors: toolsParsingErrors } =
-    getToolsFromAttributes(parsedAttributes);
+  const {
+    tools,
+    vendorTools,
+    parsingErrors: toolsParsingErrors,
+  } = getToolsFromAttributes(parsedAttributes, spanProvider);
 
   const messages = rawMessages?.map((message) => {
     return {
@@ -1083,10 +1145,20 @@ export function transformSpanAttributesToPlaygroundInstance(
 
   // TODO(parker): add support for prompt template variables
   // https://github.com/Arize-ai/phoenix/issues/4886
+  // Switch to Responses API when OpenAI vendor tools are detected from the span
+  const resolvedModel = modelConfig ?? basePlaygroundInstance.model;
+  const shouldUseResponsesApi =
+    vendorTools?.vendorSdk === "OPENAI" &&
+    (resolvedModel.provider === "OPENAI" ||
+      resolvedModel.provider === "AZURE_OPENAI");
+  const model = shouldUseResponsesApi
+    ? { ...resolvedModel, openaiApiType: "RESPONSES" as const }
+    : resolvedModel;
+
   return {
     playgroundInstance: {
       ...basePlaygroundInstance,
-      model: modelConfig ?? basePlaygroundInstance.model,
+      model,
       template:
         messages != null
           ? {
@@ -1107,6 +1179,7 @@ export function transformSpanAttributesToPlaygroundInstance(
         },
       },
       tools: tools ?? basePlaygroundInstance.tools,
+      vendorTools: vendorTools ?? basePlaygroundInstance.vendorTools ?? null,
       ...(spanToolChoice != null ? { toolChoice: spanToolChoice } : {}),
     },
     playgroundInput:
@@ -1659,6 +1732,47 @@ export function toolToPromptToolFunctionInput(tool: {
 }
 
 /**
+ * Build the PromptToolsInput wire shape from a PlaygroundInstance's tools and
+ * vendorTools. Returns null if the instance has no tools of either kind.
+ */
+export function buildToolsInput(instance: {
+  tools: Tool[];
+  vendorTools?: VendorTools | null;
+  toolChoice?: CanonicalToolChoice | null;
+}) {
+  if (!instance.tools.length && !instance.vendorTools) return null;
+  return {
+    functionTools: instance.tools.length
+      ? instance.tools.map(toolToPromptToolFunctionInput)
+      : null,
+    vendorTools: instance.vendorTools
+      ? {
+          vendorSdk: instance.vendorTools.vendorSdk,
+          definitions: instance.vendorTools.definitions,
+        }
+      : null,
+    toolChoice: toCanonicalToolChoice(instance.toolChoice),
+  };
+}
+
+/**
+ * Load VendorTools from a GraphQL response fragment. Centralizes the
+ * `as Record<string, unknown>[]` cast that every load site needs.
+ */
+export function vendorToolsFromGraphQL(
+  gqlVendorTools:
+    | { vendorSdk: string; definitions: readonly unknown[] }
+    | null
+    | undefined
+): VendorTools | null {
+  if (!gqlVendorTools) return null;
+  return {
+    vendorSdk: gqlVendorTools.vendorSdk as ToolVendorSDK,
+    definitions: gqlVendorTools.definitions as Record<string, unknown>[],
+  };
+}
+
+/**
  * Converts the canonical response format (from ModelConfig) to the
  * provider-specific shape shown in the JSON editor.
  *
@@ -1787,7 +1901,10 @@ export function toCanonicalToolDefinition(
     };
   }
   // Anthropic: { name, description, input_schema }
-  const anthropic = anthropicToolDefinitionSchema.safeParse(raw);
+  // Use .strict() so extra keys (e.g. type: "web_search") cause a parse
+  // failure instead of being silently stripped — preventing vendor-specific
+  // tools from being greedily misclassified as function tools.
+  const anthropic = anthropicToolDefinitionSchema.strict().safeParse(raw);
   if (anthropic.success) {
     return {
       name: anthropic.data.name,
@@ -1797,7 +1914,7 @@ export function toCanonicalToolDefinition(
     };
   }
   // AWS: { toolSpec: { name, description, inputSchema: { json } } }
-  const aws = awsToolDefinitionSchema.safeParse(raw);
+  const aws = awsToolDefinitionSchema.strict().safeParse(raw);
   if (aws.success) {
     return {
       name: aws.data.toolSpec.name,
@@ -1807,7 +1924,7 @@ export function toCanonicalToolDefinition(
     };
   }
   // Gemini: { name, description?, parameters? | parameters_json_schema? }
-  const gemini = geminiToolDefinitionSchema.safeParse(raw);
+  const gemini = geminiToolDefinitionSchema.strict().safeParse(raw);
   if (gemini.success) {
     const params =
       gemini.data.parameters ?? gemini.data.parameters_json_schema ?? {};
@@ -2037,12 +2154,7 @@ export const getChatCompletionInput = ({
     invocationParameters: invocationParamsToFlatObject(
       baseChatCompletionVariables.invocationParameters ?? []
     ),
-    tools: instance.tools.length
-      ? {
-          tools: instance.tools.map(toolToPromptToolFunctionInput),
-          toolChoice: toCanonicalToolChoice(instance.toolChoice),
-        }
-      : null,
+    tools: buildToolsInput(instance),
     responseFormat: buildPromptResponseFormatInput(
       instance.model.responseFormat
     ),
@@ -2141,12 +2253,7 @@ export const getChatCompletionOverDatasetInput = ({
     invocationParameters: invocationParamsToFlatObject(
       baseChatCompletionVariables.invocationParameters ?? []
     ),
-    tools: instance.tools.length
-      ? {
-          tools: instance.tools.map(toolToPromptToolFunctionInput),
-          toolChoice: toCanonicalToolChoice(instance.toolChoice),
-        }
-      : null,
+    tools: buildToolsInput(instance),
     responseFormat: buildPromptResponseFormatInput(
       instance.model.responseFormat
     ),

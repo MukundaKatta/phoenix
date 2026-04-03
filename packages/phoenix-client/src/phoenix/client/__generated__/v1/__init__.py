@@ -448,6 +448,12 @@ class PromptToolFunctionDefinition(TypedDict):
     strict: NotRequired[bool]
 
 
+class PromptVendorTools(TypedDict):
+    type: Literal["vendor"]
+    vendor_sdk: Literal["openai", "anthropic", "google_genai", "aws_bedrock"]
+    definitions: Sequence[Mapping[str, Any]]
+
+
 class PromptVersionTag(TypedDict):
     name: str
     id: str
@@ -904,7 +910,7 @@ class PromptToolFunction(TypedDict):
 
 class PromptTools(TypedDict):
     type: Literal["tools"]
-    tools: Sequence[PromptToolFunction]
+    tools: Union[Sequence[PromptToolFunction], PromptVendorTools]
     tool_choice: NotRequired[
         Union[
             PromptToolChoiceNone,

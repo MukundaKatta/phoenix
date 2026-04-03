@@ -2854,15 +2854,27 @@ input PromptToolFunctionInput {
 }
 
 type PromptTools {
-  tools: [PromptToolFunction!]!
+  functionTools: [PromptToolFunction!]
+  vendorTools: PromptVendorTools
   toolChoice: PromptToolChoice
   disableParallelToolCalls: Boolean
 }
 
 input PromptToolsInput {
-  tools: [PromptToolFunctionInput!]!
+  functionTools: [PromptToolFunctionInput!] = null
+  vendorTools: PromptVendorToolsInput = null
   toolChoice: PromptToolChoiceInput = null
   disableParallelToolCalls: Boolean = null
+}
+
+type PromptVendorTools {
+  vendorSdk: ToolVendorSDK!
+  definitions: [JSON!]!
+}
+
+input PromptVendorToolsInput {
+  vendorSdk: ToolVendorSDK!
+  definitions: [JSON!]!
 }
 
 type PromptVersion implements Node {
@@ -3550,6 +3562,13 @@ type ToolResultContentValue {
 input ToolResultContentValueInput {
   toolCallId: String!
   result: JSON!
+}
+
+enum ToolVendorSDK {
+  OPENAI
+  ANTHROPIC
+  GOOGLE_GENAI
+  AWS_BEDROCK
 }
 
 type Trace implements Node {

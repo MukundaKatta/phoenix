@@ -55,13 +55,17 @@ export function PromptCodeExportCard({
           }
         }
         tools {
-          tools {
+          functionTools {
             function {
               name
               description
               parameters
               strict
             }
+          }
+          vendorTools {
+            vendorSdk
+            definitions
           }
           toolChoice {
             type

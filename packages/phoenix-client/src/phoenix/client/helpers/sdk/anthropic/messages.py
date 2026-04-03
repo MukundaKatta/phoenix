@@ -409,7 +409,13 @@ class _ToolKwargsConversion:
         ans: _ToolKwargs = {}
         if not obj:
             return ans
-        tools: list[ToolParam] = list(_ToolConversion.to_anthropic(obj["tools"]))
+        tools_value = obj["tools"]
+        if isinstance(tools_value, Mapping) and tools_value.get("type") == "vendor":
+            vendor_sdk = tools_value.get("vendor_sdk")
+            if vendor_sdk == "anthropic":
+                ans["tools"] = list(tools_value.get("definitions", []))  # type: ignore[arg-type]
+            return ans
+        tools: list[ToolParam] = list(_ToolConversion.to_anthropic(tools_value))  # type: ignore[arg-type]
         ans["tools"] = tools
         if "tool_choice" in obj:
             if obj["tool_choice"]["type"] == "none":

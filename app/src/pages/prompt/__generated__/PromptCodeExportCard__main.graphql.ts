@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<6f21c759ff2c42800cbc9db8b6d5efa8>>
+ * @generated SignedSource<<2d8d24b321791042e5c5e0a476cf8eb1>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -14,6 +14,7 @@ export type PromptMessageRole = "AI" | "SYSTEM" | "TOOL" | "USER";
 export type PromptTemplateFormat = "F_STRING" | "MUSTACHE" | "NONE";
 export type PromptTemplateType = "CHAT" | "STRING";
 export type PromptToolChoiceType = "NONE" | "ONE_OR_MORE" | "SPECIFIC_FUNCTION" | "ZERO_OR_MORE";
+export type ToolVendorSDK = "ANTHROPIC" | "AWS_BEDROCK" | "GOOGLE_GENAI" | "OPENAI";
 import { FragmentRefs } from "relay-runtime";
 export type PromptCodeExportCard__main$data = {
   readonly id: string;
@@ -70,18 +71,22 @@ export type PromptCodeExportCard__main$data = {
   readonly templateType: PromptTemplateType;
   readonly tools: {
     readonly disableParallelToolCalls: boolean | null;
-    readonly toolChoice: {
-      readonly functionName: string | null;
-      readonly type: PromptToolChoiceType;
-    } | null;
-    readonly tools: ReadonlyArray<{
+    readonly functionTools: ReadonlyArray<{
       readonly function: {
         readonly description: string | null;
         readonly name: string;
         readonly parameters: any;
         readonly strict: boolean | null;
       };
-    }>;
+    }> | null;
+    readonly toolChoice: {
+      readonly functionName: string | null;
+      readonly type: PromptToolChoiceType;
+    } | null;
+    readonly vendorTools: {
+      readonly definitions: ReadonlyArray<any>;
+      readonly vendorSdk: ToolVendorSDK;
+    } | null;
   } | null;
   readonly " $fragmentType": "PromptCodeExportCard__main";
 };
@@ -205,7 +210,7 @@ return {
           "args": null,
           "concreteType": "PromptToolFunction",
           "kind": "LinkedField",
-          "name": "tools",
+          "name": "functionTools",
           "plural": true,
           "selections": [
             {
@@ -227,6 +232,31 @@ return {
                 },
                 (v2/*: any*/)
               ],
+              "storageKey": null
+            }
+          ],
+          "storageKey": null
+        },
+        {
+          "alias": null,
+          "args": null,
+          "concreteType": "PromptVendorTools",
+          "kind": "LinkedField",
+          "name": "vendorTools",
+          "plural": false,
+          "selections": [
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "vendorSdk",
+              "storageKey": null
+            },
+            {
+              "alias": null,
+              "args": null,
+              "kind": "ScalarField",
+              "name": "definitions",
               "storageKey": null
             }
           ],
@@ -441,6 +471,6 @@ return {
 };
 })();
 
-(node as any).hash = "ff8e5b9568638ecc6bcdcd2371b3789e";
+(node as any).hash = "a09f2669979376999623ac54c38eb3a2";
 
 export default node;

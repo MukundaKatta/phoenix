@@ -28,6 +28,7 @@ import type {
   ModelConfig,
   PlaygroundInstance,
   PlaygroundProps,
+  Tool,
 } from "@phoenix/store/playground/types";
 import { safelyStringifyJSON } from "@phoenix/utils/jsonUtils";
 import {
@@ -41,7 +42,7 @@ import {
   fetchSupportedInvocationParameters,
   objectToInvocationParameters,
 } from "./fetchPlaygroundPrompt";
-import { getChatRole } from "./playgroundUtils";
+import { getChatRole, vendorToolsFromGraphQL } from "./playgroundUtils";
 
 const EXPERIMENT_REHYDRATION_QUERY = graphql`
   query experimentRehydrationQuery($experimentId: ID!) {
@@ -95,13 +96,17 @@ const EXPERIMENT_REHYDRATION_QUERY = graphql`
                 }
               }
               tools {
-                tools {
+                functionTools {
                   function {
                     name
                     description
                     parameters
                     strict
                   }
+                }
+                vendorTools {
+                  vendorSdk
+                  definitions
                 }
                 toolChoice {
                   type
@@ -243,17 +248,20 @@ function taskConfigToPlaygroundProps(
       : [];
 
   // --- Tools ---
-  const toolsList = prompt.tools?.tools ?? [];
-  const tools = toolsList.map((t) => ({
-    id: generateToolId(),
-    editorType: "json" as const,
-    definition: {
-      name: t.function.name,
-      description: t.function.description ?? null,
-      parameters: t.function.parameters,
-      strict: t.function.strict ?? null,
-    },
-  }));
+  const tools: Tool[] = (prompt.tools?.functionTools ?? []).map(
+    (t): Tool => ({
+      id: generateToolId(),
+      editorType: "json" as const,
+      definition: {
+        name: t.function.name,
+        description: t.function.description ?? null,
+        parameters: t.function.parameters,
+        strict: t.function.strict ?? null,
+      },
+    })
+  );
+
+  const vendorTools = vendorToolsFromGraphQL(prompt.tools?.vendorTools ?? null);
 
   // --- Tool Choice ---
   const rawToolChoice = prompt.tools?.toolChoice;
@@ -342,6 +350,7 @@ function taskConfigToPlaygroundProps(
       messages,
     },
     tools,
+    vendorTools,
     toolChoice,
   };
 

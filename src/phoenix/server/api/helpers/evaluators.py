@@ -46,7 +46,7 @@ def validate_evaluator_prompt_and_configs(
     """
     if prompt_response_format is not None:
         raise ValueError(_LLMEvaluatorPromptErrorMessage.RESPONSE_FORMAT_NOT_SUPPORTED)
-    if prompt_tools is None:
+    if prompt_tools is None or not isinstance(prompt_tools.tools, list):
         raise ValueError(_LLMEvaluatorPromptErrorMessage.TOOLS_REQUIRED)
     if len(prompt_tools.tools) != len(evaluator_output_configs):
         raise ValueError(_LLMEvaluatorPromptErrorMessage.TOOL_COUNT_MUST_MATCH_CONFIG_COUNT)

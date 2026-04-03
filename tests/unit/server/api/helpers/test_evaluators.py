@@ -108,6 +108,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
     ) -> None:
         description = "evaluates the correctness of the output"
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.description = description
         validate_consistent_llm_evaluator_and_prompt_version(
             prompt_version, output_config, description=description
@@ -134,6 +135,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.description = "a string description"
         with pytest.raises(
             ValueError,
@@ -196,6 +198,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools.append(
             PromptToolFunction(
                 type="function",
@@ -280,6 +283,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters["type"] = "array"
         with pytest.raises(
             ValueError,
@@ -293,6 +297,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters["properties"] = {}
         with pytest.raises(
             ValueError,
@@ -306,6 +311,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -329,6 +335,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -352,6 +359,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -375,6 +383,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -397,6 +406,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -419,6 +429,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters["required"] = [
             "label",
             "label",
@@ -435,6 +446,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -460,6 +472,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -489,6 +502,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -512,6 +526,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -535,6 +550,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters["properties"]["label"]["enum"].append(
             "neutral"
         )
@@ -550,6 +566,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -573,6 +590,7 @@ class TestValidateConsistentLLMEvaluatorAndPromptVersion:
         prompt_version: models.PromptVersion,
     ) -> None:
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools[0].function.parameters = {
             "type": "object",
             "properties": {
@@ -624,6 +642,7 @@ class TestMultiConfigValidation:
         )
         # Add a second tool matching the second config name
         assert prompt_version.tools is not None
+        assert isinstance(prompt_version.tools.tools, list)
         prompt_version.tools.tools.append(
             PromptToolFunction(
                 type="function",
