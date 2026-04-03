@@ -22,6 +22,7 @@ import {
   type FileWithProgress,
 } from "@phoenix/components/core/dropzone";
 import { Tab, TabList, TabPanel, Tabs } from "@phoenix/components/core/tabs";
+import { assertUnreachable } from "@phoenix/typeUtils";
 import { parseCSVFile } from "@phoenix/utils/csvUtils";
 import { formatJSONLError, parseJSONLFile } from "@phoenix/utils/jsonlUtils";
 import { isPlainObject, safelyParseJSONString } from "@phoenix/utils/jsonUtils";
@@ -213,7 +214,6 @@ const rowCountCSS = css`
  */
 export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
   const { onCancel, mode } = props;
-  const isAppendMode = mode === "append";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [columns, setColumns] = useState<string[]>([]);
@@ -238,7 +238,7 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
     mode: "onChange",
     defaultValues: {
       file: null,
-      name: isAppendMode ? props.datasetName : "",
+      name: mode === "append" ? props.datasetName : "",
       input_keys: [],
       output_keys: [],
       metadata_keys: [],
@@ -369,7 +369,7 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
 
       setValue("file", file, { shouldValidate: true, shouldDirty: true });
 
-      if (!isAppendMode) {
+      if (mode === "create") {
         const name = file.name.replace(/\.(csv|jsonl)$/i, "");
         setValue("name", name, { shouldValidate: true });
       }
@@ -446,7 +446,7 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
       };
       parseFile();
     },
-    [resetField, setValue, isAppendMode]
+    [resetField, setValue, mode]
   );
 
   const handleFileSelect = useCallback(
@@ -537,13 +537,15 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
           invariant(false, `Invalid file type: ${fileType}`);
       }
 
-      if (isAppendMode) {
+      if (mode === "append") {
         formData.append("name", props.datasetName);
         formData.append("action", "append");
-      } else {
+      } else if (mode === "create") {
         formData.append("name", data.name);
         formData.append("description", data.description);
         formData.append("metadata", JSON.stringify(data.metadata));
+      } else {
+        assertUnreachable(mode);
       }
       data.input_keys.forEach((key) => {
         formData.append("input_keys[]", key);
@@ -593,7 +595,7 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
         .then((res) => {
           if (props.mode === "append") {
             props.onExamplesAdded();
-          } else {
+          } else if (mode === "create") {
             props.onDatasetCreated({
               name: data.name,
               id: res["data"]["dataset_id"],
@@ -601,16 +603,17 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
           }
         })
         .catch((error) => {
-          const fallback = isAppendMode
-            ? "Failed to add examples"
-            : "Failed to create dataset";
+          const fallback =
+            mode === "append"
+              ? "Failed to add examples"
+              : "Failed to create dataset";
           setErrorMessage(error instanceof Error ? error.message : fallback);
         })
         .finally(() => {
           setIsSubmitting(false);
         });
     },
-    [fileType, collapseKeys, keysToCollapse, isAppendMode, props]
+    [fileType, collapseKeys, keysToCollapse, mode, props]
   );
 
   const hasPreviewData = columns.length > 0 && previewRows.length > 0;
@@ -660,7 +663,7 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
           isDisabled={isSubmitting}
         />
 
-        {!isAppendMode && (
+        {mode === "create" && (
           <div css={formGridCSS}>
             <Controller
               name="name"
@@ -839,10 +842,10 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
           }
         >
           {isSubmitting
-            ? isAppendMode
+            ? mode === "append"
               ? "Adding..."
               : "Creating..."
-            : isAppendMode
+            : mode === "append"
               ? "Add Examples"
               : "Create Dataset"}
         </Button>
