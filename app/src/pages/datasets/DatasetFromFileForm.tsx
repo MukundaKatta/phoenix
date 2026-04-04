@@ -32,6 +32,7 @@ import {
   ColumnAssigner,
   type ColumnAssignerValue,
   getAutoAssignment,
+  isAutoIdColumn,
   isAutoSplitColumn,
 } from "./ColumnAssigner";
 import { computeBucketCollapseConflicts } from "./ColumnAssigner/collapseUtils";
@@ -40,7 +41,10 @@ import { ColumnSingleSelector } from "./ColumnSingleSelector";
 import { DatasetPreviewTable } from "./DatasetPreview";
 import { RowPreviewTable } from "./RowPreview";
 
-type AutoAssignmentResult = ColumnAssignerValue & { split: string[] };
+type AutoAssignmentResult = ColumnAssignerValue & {
+  split: string[];
+  exampleIdKey: string | null;
+};
 
 /**
  * Auto-assign columns based on name matching heuristics.
@@ -51,10 +55,14 @@ function computeAutoAssignment(columns: string[]): AutoAssignmentResult {
     output: [],
     metadata: [],
     split: [],
+    exampleIdKey: null,
   };
   for (const column of columns) {
     if (isAutoSplitColumn(column)) {
       result.split.push(column);
+    }
+    if (result.exampleIdKey === null && isAutoIdColumn(column)) {
+      result.exampleIdKey = column;
     }
     const bucket = getAutoAssignment(column);
     if (bucket === "input") {
@@ -399,6 +407,9 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
               shouldDirty: true,
             });
             setValue("split_keys", autoAssigned.split, { shouldDirty: true });
+            setValue("example_id_key", autoAssigned.exampleIdKey, {
+              shouldDirty: true,
+            });
           } else if (detectedType === "jsonl") {
             // Single-pass parsing: extracts keys, preview rows, and count
             const result = await parseJSONLFile(file, PREVIEW_ROW_COUNT);
@@ -423,6 +434,9 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
                 shouldDirty: true,
               });
               setValue("split_keys", autoAssigned.split, { shouldDirty: true });
+              setValue("example_id_key", autoAssigned.exampleIdKey, {
+                shouldDirty: true,
+              });
             } else {
               setColumns([]);
               setPreviewRows([]);
@@ -507,6 +521,9 @@ export function DatasetFromFileForm(props: DatasetFromFileFormProps) {
     setValue("output_keys", autoAssigned.output, { shouldDirty: true });
     setValue("metadata_keys", autoAssigned.metadata, { shouldDirty: true });
     setValue("split_keys", autoAssigned.split, { shouldDirty: true });
+    setValue("example_id_key", autoAssigned.exampleIdKey, {
+      shouldDirty: true,
+    });
   }, [columns, setValue]);
 
   const onSubmit = useCallback(
