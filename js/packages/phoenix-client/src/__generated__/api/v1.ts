@@ -5132,7 +5132,7 @@ export interface operations {
                 name?: string[] | null;
                 /** @description Filter by status code(s). Values: OK, ERROR, UNSET */
                 status_code?: string[] | null;
-                /** @description Filter by attribute key:value pairs. Format: key:value (dot-separated keys, e.g. llm.model_name:gpt-4). Multiple filters are ANDed. Values may contain colons (split is on first colon only). Type-aware comparison: bare integers (42), floats (3.14), and booleans (true/false) are compared as their native types; quoted strings ("42") are compared as strings. */
+                /** @description Filter by attribute key:value pairs (dot-separated keys, e.g. llm.model_name:gpt-4). Multiple filters are ANDed. Values may contain colons (split is on the first colon only). */
                 attribute?: string[] | null;
             };
             header?: never;
@@ -5203,7 +5203,7 @@ export interface operations {
                 span_kind?: string[] | null;
                 /** @description Filter by status code(s). Values: OK, ERROR, UNSET */
                 status_code?: string[] | null;
-                /** @description Filter by attribute key:value pairs. Format: key:value (dot-separated keys, e.g. llm.model_name:gpt-4). Multiple filters are ANDed. Values may contain colons (split is on first colon only). Type-aware comparison: bare integers (42), floats (3.14), and booleans (true/false) are compared as their native types; quoted strings ("42") are compared as strings. */
+                /** @description Filter by attribute key:value pairs (dot-separated keys, e.g. llm.model_name:gpt-4). Multiple filters are ANDed. Values may contain colons (split is on the first colon only). */
                 attribute?: string[] | null;
             };
             header?: never;
