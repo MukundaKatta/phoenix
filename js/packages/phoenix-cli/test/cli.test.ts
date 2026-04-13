@@ -231,4 +231,54 @@ describe("Phoenix CLI", () => {
       "delete"
     );
   });
+
+  it("should register auth command with status, profiles, and switch subcommands", () => {
+    const program = createProgram();
+    const authCommand = program.commands.find(
+      (command) => command.name() === "auth"
+    );
+
+    expect(authCommand).toBeDefined();
+    const subcommandNames = authCommand?.commands.map((c) => c.name());
+    expect(subcommandNames).toContain("status");
+    expect(subcommandNames).toContain("profile");
+    expect(subcommandNames).toContain("switch");
+  });
+
+  it("should register auth profiles with list, create, and delete subcommands", () => {
+    const program = createProgram();
+    const authCommand = program.commands.find(
+      (command) => command.name() === "auth"
+    );
+    const profilesCommand = authCommand?.commands.find(
+      (command) => command.name() === "profile"
+    );
+
+    expect(profilesCommand).toBeDefined();
+    const subcommandNames = profilesCommand?.commands.map((c) => c.name());
+    expect(subcommandNames).toEqual(
+      expect.arrayContaining(["list", "create", "delete"])
+    );
+  });
+
+  it("should register auth switch as a direct subcommand of auth", () => {
+    const program = createProgram();
+    const authCommand = program.commands.find(
+      (command) => command.name() === "auth"
+    );
+    const switchCommand = authCommand?.commands.find(
+      (command) => command.name() === "switch"
+    );
+
+    expect(switchCommand).toBeDefined();
+    // switch takes a <name> argument
+    expect(switchCommand?.registeredArguments.map((a) => a.name())).toContain(
+      "name"
+    );
+  });
+
+  it("should include auth in the top-level help output", () => {
+    const program = createProgram();
+    expect(program.helpInformation()).toContain("auth");
+  });
 });
