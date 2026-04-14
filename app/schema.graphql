@@ -1232,6 +1232,12 @@ type DeleteSandboxConfigPayload {
   query: Query!
 }
 
+type DeleteSandboxCredentialPayload {
+  backendType: String!
+  key: String!
+  query: Query!
+}
+
 input DeleteUsersInput {
   userIds: [ID!]!
 }
@@ -2236,6 +2242,8 @@ type Mutation {
   updateSandboxConfig(input: UpdateSandboxConfigInput!): UpdateSandboxConfigPayload!
   deleteSandboxConfig(id: ID!): DeleteSandboxConfigPayload!
   updateSandboxProvider(input: UpdateSandboxProviderInput!): UpdateSandboxProviderPayload!
+  setSandboxCredential(backendType: String!, key: String!, value: String!): SetSandboxCredentialPayload!
+  deleteSandboxCredential(backendType: String!, key: String!): DeleteSandboxCredentialPayload!
   upsertOrDeleteSecrets(input: UpsertOrDeleteSecretsMutationInput!): UpsertOrDeleteSecretsMutationPayload!
   createSpanAnnotations(input: [CreateSpanAnnotationInput!]!): SpanAnnotationMutationPayload!
   createSpanNote(annotationInput: CreateSpanNoteInput!): SpanAnnotationMutationPayload!
@@ -3196,6 +3204,12 @@ input SetPromptVersionTagInput {
   promptVersionId: ID!
   name: Identifier!
   description: String = null
+}
+
+type SetSandboxCredentialPayload {
+  backendType: String!
+  key: String!
+  query: Query!
 }
 
 enum SortDir {
