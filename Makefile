@@ -346,8 +346,7 @@ codegen-prompts: ## Generate prompts code from YAML files
 
 sync-models: ## Sync model cost manifest from remote sources
 	@echo -e "$(CYAN)Syncing model cost manifest...$(NC)"
-	@$(UV) pip install pydantic
-	@$(UV) run python .github/.scripts/sync_models.py
+	@$(UV) run --with pydantic --no-project python .github/.scripts/sync_models.py
 	@echo -e "$(GREEN)✓ Done$(NC)"
 
 schema-ddl: ## Compile DDL schema from PostgreSQL database (use ARGS= to pass arguments)
