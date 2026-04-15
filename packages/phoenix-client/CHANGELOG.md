@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.3.2](https://github.com/Arize-ai/phoenix/compare/arize-phoenix-client-v2.3.1...arize-phoenix-client-v2.3.2) (2026-04-15)
+
+
+### Documentation
+
+* add ATIF trajectory import docs ([#12631](https://github.com/Arize-ai/phoenix/issues/12631)) ([ef9e6cc](https://github.com/Arize-ai/phoenix/commit/ef9e6cc12dfe54136f2f90b83718f7b98bb2597c))
+
 ## [2.3.1](https://github.com/Arize-ai/phoenix/compare/arize-phoenix-client-v2.3.0...arize-phoenix-client-v2.3.1) (2026-04-07)
 
 
