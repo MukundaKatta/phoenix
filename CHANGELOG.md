@@ -1,5 +1,12 @@
 # Changelog
 
+## [14.5.1](https://github.com/Arize-ai/phoenix/compare/arize-phoenix-v14.5.0...arize-phoenix-v14.5.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* **playground:** track eval failures separately from completions ([#12675](https://github.com/Arize-ai/phoenix/issues/12675)) ([03172f3](https://github.com/Arize-ai/phoenix/commit/03172f3fe957ba27b169dc10fef496777613e8f7))
+
 ## [14.5.0](https://github.com/Arize-ai/phoenix/compare/arize-phoenix-v14.4.0...arize-phoenix-v14.5.0) (2026-04-14)
 
 
